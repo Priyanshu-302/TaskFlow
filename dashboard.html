@@ -246,8 +246,9 @@
     </main>
 
     <script type="text/javascript">
+      // --- Frontend: dashboard.html <script> tag content ---
+
       // --- CONFIGURATION ---
-      // 🚀 IMPORTANT: Ensure this API BASE URL points to your Render backend
       const API_BASE_URL = "https://taskflow-api-to12.onrender.com/api/tasks";
       const API_PROFILE_URL =
         "https://taskflow-api-to12.onrender.com/api/profile";
@@ -256,17 +257,23 @@
 
       let currentTasks = [];
 
-      /** * Generates options for fetch requests.
-       * The credentials: 'include' option is CRITICAL for sending the HttpOnly cookie.
-       */
+      /** 🟢 FIX: Generates options using the Authorization: Bearer header. */
       const getFetchOptions = (method, data = null) => {
+        // 🟢 FIX 1: Retrieve token from Local Storage
+        const token = localStorage.getItem("authToken");
+
         const options = {
           method: method,
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          // 🛑 REMOVED: credentials: "include"
         };
+
+        // 🟢 FIX 2: Attach Authorization header if token exists
+        if (token) {
+          options.headers["Authorization"] = `Bearer ${token}`;
+        }
 
         if (data) {
           options.body = JSON.stringify(data);
@@ -275,7 +282,6 @@
       };
 
       // --- UTILITY FUNCTIONS ---
-
       const sortTasks = (a, b) => {
         if (a.completed !== b.completed) {
           return a.completed ? 1 : -1;
@@ -283,8 +289,6 @@
         const priorityOrder = { High: 3, Medium: 2, Low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       };
-
-      // --- UI/RENDERING FUNCTIONS (omitted for brevity, assume correct) ---
 
       /** Renders tasks dynamically to the DOM and updates stats. */
       const renderTasks = (tasks) => {
@@ -359,15 +363,13 @@
         }
       };
 
-      // --- EXPRESS API CLIENT FUNCTIONS (All now use getFetchOptions) ---
+      // --- EXPRESS API CLIENT FUNCTIONS (All now use Bearer Token) ---
 
       /** * Fetches the authenticated user's profile data (GET /api/profile). */
       window.fetchProfileData = async () => {
         const displayEl = document.getElementById("user-id-display");
-        // Show loader state
         displayEl.textContent = "Loading...";
 
-        // Use a controller to abort the fetch if it takes too long (4s)
         const controller = new AbortController();
         const signal = controller.signal;
         const timeoutId = setTimeout(() => controller.abort(), 4000);
@@ -382,6 +384,7 @@
           if (response.status === 401 || response.status === 403) {
             // Authentication failed: redirect to login
             console.error("Profile fetch failed: Unauthorized. Redirecting.");
+            localStorage.removeItem("authToken"); // Clear invalid token
             window.location.href = "./auth.html";
             return;
           }
@@ -399,15 +402,13 @@
           clearTimeout(timeoutId);
 
           // 🛑 CRITICAL FIX: Treat ANY network/fetch error or timeout as unauthenticated
-          // to force the login redirect and clear the session loop attempt.
           console.error(
             "Critical failure during profile authentication check. Forcing redirect.",
             error
           );
+          localStorage.removeItem("authToken"); // Clear token on network fail
           window.location.href = "./auth.html";
           return;
-
-          // The original code's complex fallback is replaced by this definitive redirect.
         }
       };
 
@@ -421,11 +422,11 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Authentication failed. Redirecting to login.");
+            localStorage.removeItem("authToken"); // Clear invalid token
             window.location.href = "./auth.html";
             return;
           }
           if (!response.ok) {
-            // More robust error handling for general server issues (500s)
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
@@ -435,7 +436,6 @@
           currentTasks.sort(sortTasks);
           renderTasks(currentTasks);
         } catch (error) {
-          // Display the error but do NOT force a redirect here, as fetchProfileData already handled it.
           const msg = error.message.includes("Failed to fetch")
             ? "Network Error: Cannot reach Express server."
             : error.message;
@@ -468,6 +468,7 @@
           if (response.status === 401 || response.status === 403) {
             // Catch 401/403 errors that occur during in-app interaction
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -498,6 +499,7 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -521,6 +523,7 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -536,21 +539,28 @@
 
       // --- INITIALIZATION AND AUTHENTICATION ---
 
+      /** 🟢 FIX: Check for token immediately on load to prevent flash of content */
+      const checkInitialAuth = () => {
+        if (!localStorage.getItem("authToken")) {
+          console.log("No token found in Local Storage. Redirecting to login.");
+          window.location.href = "./auth.html";
+        }
+      };
+
       /** Initializes the app by fetching profile and tasks. */
       const initApp = async () => {
+        // Check auth status immediately before fetching anything
+        checkInitialAuth();
+
         // Step 1: Attempt to fetch the profile to determine auth status and username.
-        // This is the primary point of failure for the redirect loop.
         await window.fetchProfileData();
 
         // Step 2: Only proceed to fetch tasks if authentication was successful.
-        // If fetchProfileData redirected, the rest of this code is ignored.
         if (
           document.getElementById("user-id-display").textContent !== "Guest"
         ) {
           await window.fetchTasks();
         } else {
-          // If fetchProfileData failed but didn't redirect (e.g., if we caught a different error),
-          // ensure the loader is hidden. (Note: with the fix above, this should always redirect).
           document.getElementById("loading-overlay").classList.add("hidden");
         }
 
@@ -561,20 +571,13 @@
 
       /** Handles user sign out by clearing token and redirecting. */
       window.handleLogout = async () => {
-        console.log(
-          "Sending /api/logout request to clear JWT cookie on Render..."
-        );
-        try {
-          // 🚀 IMPORTANT: Use the correct deployed API URL for logout
-          await fetch(API_LOGOUT_URL, {
-            method: "POST",
-            credentials: "include",
-          });
-        } catch (e) {
-          console.warn(
-            "Logout request failed (expected if API is down), proceeding with client-side redirect."
-          );
-        }
+        console.log("Clearing Local Storage token and redirecting...");
+
+        // 🟢 FIX: Clear token from Local Storage
+        localStorage.removeItem("authToken");
+
+        // No API call needed to clear cookie since we're not using them
+
         window.location.href = "./auth.html";
       };
 

@@ -376,10 +376,9 @@
     </script>
 
     <script>
-      // 🚨 UPDATED CONFIGURATION: Use your Vercel URL for API calls
-      // The backend should handle the mapping from this public domain to your backend service.
-      // If your backend is NOT on the same domain, change 'https://task-flow-one-ebon.vercel.app'
-      // to the actual deployed backend URL (e.g., 'https://your-backend-api.com').
+      // --- Frontend: auth.html <script> tag content ---
+
+      // 🚨 UPDATED CONFIGURATION: Base URL for Render API
       const BASE_URL = "https://taskflow-api-to12.onrender.com";
       const API_LOGIN_URL = `${BASE_URL}/api/login`;
       const API_SIGNUP_URL = `${BASE_URL}/api/signup`;
@@ -419,12 +418,8 @@
       showLoginLink.addEventListener("click", slideToLogin);
 
       // --- INTERACTIVE: PASSWORD TOGGLE ---
-      // --- INTERACTIVE: PASSWORD TOGGLE (CORRECTED) ---
       function togglePasswordVisibility(fieldId, buttonElement) {
         const field = document.getElementById(fieldId);
-
-        // 🎯 FIX: Find the original <span> container that holds the data-lucide attribute
-        // The button element is the parent of the span you want to modify.
         const iconContainer = buttonElement.querySelector("span[data-lucide]");
 
         if (field.type === "password") {
@@ -439,7 +434,6 @@
           }
         }
 
-        // CRITICAL: Re-render the icon to display the new attribute state
         lucide.createIcons();
       }
 
@@ -495,7 +489,7 @@
         spinner.classList.toggle("active", isLoading);
       }
 
-      // 🚀 THE CRITICAL FIX IS HERE 🚀
+      // 🚀 THE CRITICAL LOGIN HANDLER FIX 🚀
       async function handleLogin() {
         const email = document.getElementById("login-email").value;
         const password = document.getElementById("login-password").value;
@@ -514,15 +508,14 @@
         console.log("Sending Login Data:", loginData);
 
         try {
-          // FIX: Added credentials: 'include' (Essential for HttpOnly cookies)
+          // 🛑 REMOVED credentials: "include"
           const response = await fetch(API_LOGIN_URL, {
             method: "POST",
             headers: getJsonHeaders(),
             body: JSON.stringify(loginData),
-            credentials: "include",
           });
 
-          // Simulate network latency (since fetch might be instant on localhost)
+          // Simulate network latency
           await new Promise((resolve) => setTimeout(resolve, 500));
 
           const responseData = await response
@@ -530,15 +523,13 @@
             .catch(() => ({ message: "Could not parse JSON response." }));
 
           if (response.ok) {
-            // SUCCESS: Express should send a JWT token via HttpOnly Cookie (or in the response body)
-            showMessage(`Login successful! Redirecting to dashboard...`, false);
-            console.log(
-              "Expected Success Response Data (JWT info):",
-              responseData
-            );
+            // 🟢 FIX 1: Save the token to Local Storage
+            localStorage.setItem("authToken", responseData.token);
 
-            // 🟢 CRITICAL FIX: The redirect line is now active!
-            // It uses a small delay so the user can see the "successful" message.
+            showMessage(`Login successful! Redirecting to dashboard...`, false);
+            console.log("Token saved. Success Response Data:", responseData);
+
+            // 🟢 CRITICAL FIX: Redirect
             setTimeout(() => (window.location.href = "./dashboard.html"), 500);
           } else if (response.status === 401 || response.status === 403) {
             // FAILURE: Authentication or Authorization error
@@ -596,12 +587,11 @@
         console.log("Sending Signup Data:", signupData);
 
         try {
-          // FIX: Added credentials: 'include'
+          // 🛑 REMOVED credentials: "include"
           const response = await fetch(API_SIGNUP_URL, {
             method: "POST",
             headers: getJsonHeaders(),
             body: JSON.stringify(signupData),
-            credentials: "include",
           });
 
           // Simulate network latency
