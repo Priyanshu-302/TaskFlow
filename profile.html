@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskFlow: User Profile</title>
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="./manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -239,33 +239,31 @@
     <!-- JAVASCRIPT: Frontend Logic (Express/MongoDB Ready) -->
     <script type="text/javascript">
       // --- CONFIGURATION ---
-      const API_PROFILE_URL = "https://taskflow-api-to12.onrender.com/api/profile";
-      const API_PASSWORD_URL = "https://taskflow-api-to12.onrender.com/api/profile/password";
-      const API_LOGOUT_URL = "https://taskflow-api-to12.onrender.com/api/logout";
+      const API_PROFILE_URL =
+        "https://taskflow-api-to12.onrender.com/api/profile";
+      const API_PASSWORD_URL =
+        "https://taskflow-api-to12.onrender.com/api/profile/password";
+      const API_LOGOUT_URL =
+        "https://taskflow-api-to12.onrender.com/api/logout";
 
-      // NOTE: The Authorization header is only needed because the browser doesn't automatically
-      // send the cookie for the initial fetch on localhost, even with credentials: 'include'.
-      // This JWT placeholder is removed in favor of relying on the cookie, which is better practice.
-      const DUMMY_JWT = "frontend_auth_placeholder";
-
-      /** * Retrieves the Authorization header with the JWT token. */
-      const getAuthHeaders = (contentType = "application/json") => {
-        return {
-          "Content-Type": contentType,
-          // In a secure application, this header isn't strictly necessary
-          // when using HttpOnly cookies, but we use it for completeness.
-          Authorization: `Bearer ${DUMMY_JWT}`,
-          credentials: "include",
-        };
-      };
-
-      /** * Retrieves fetch options with credentials. */
+      // --- FIX: getFetchOptions now uses Authorization: Bearer ---
+      /** * Retrieves fetch options with Authorization header.
+       * This is CRITICAL for sending the Local Storage token.
+       */
       const getFetchOptions = (method, data = null) => {
+        // 🟢 FIX 1: Retrieve token from Local Storage
+        const token = localStorage.getItem("authToken");
+
         const options = {
           method: method,
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // CRITICAL: Ensures cookie is sent
+          headers: {
+            "Content-Type": "application/json",
+            // 🟢 FIX 2: Attach Authorization header
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          // 🛑 REMOVED: credentials: "include"
         };
+
         if (data) options.body = JSON.stringify(data);
         return options;
       };
@@ -275,6 +273,9 @@
       /** Shows a temporary message box for success or error feedback */
       const showMessage = (message, type = "success") => {
         const box = document.getElementById("message-box");
+        // Ensure box exists (assuming you have one in your profile.html HTML body)
+        if (!box) return;
+
         box.textContent = message;
         box.classList.remove("hidden", "bg-error", "bg-success");
         box.classList.add(type === "success" ? "bg-success" : "bg-error");
@@ -328,18 +329,34 @@
         document.getElementById("new-email").value = profile.email;
       };
 
+      // --- CORE AUTHENTICATION LOGIC ---
+
+      /** * 🟢 FIX 3: Initial check for token BEFORE attempting to fetch data.
+       * If token is missing, redirect immediately.
+       */
+      const checkInitialAuth = () => {
+        if (!localStorage.getItem("authToken")) {
+          window.location.href = "./auth.html";
+          return true; // Indicate redirect is happening
+        }
+        return false; // Indicate token is present
+      };
+
       // --- API INTEGRATION FUNCTIONS ---
 
       /** Fetches current user profile data (GET /api/profile) */
       window.fetchProfileData = async () => {
+        // 🛑 If token is missing, the call is unnecessary as it will fail (checkInitialAuth handles it)
+
         document.getElementById("loading-overlay").classList.remove("hidden");
 
         try {
-          // Fetch request now uses the secure getFetchOptions
+          // Fetch request now uses the secure getFetchOptions (Bearer token)
           const response = await fetch(API_PROFILE_URL, getFetchOptions("GET"));
 
           if (response.status === 401 || response.status === 403) {
-            // Unauthorized/Forbidden: Session is invalid
+            // Unauthorized/Forbidden: Session is invalid. Force logout/redirect.
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -354,12 +371,10 @@
           updateUIWithProfileData(profile); // Populate fields with real DB data
         } catch (error) {
           console.error("Failed to fetch profile data:", error);
-          showMessage(
-            `Failed to load profile: ${
-              error.message || "Check API connection."
-            }`,
-            "error"
-          );
+          // 🛑 FIX 4: Treat general fetch failures (network, 500) as auth failure and redirect
+          localStorage.removeItem("authToken");
+          showMessage(`Failed to load profile: Check API connection.`, "error");
+          window.location.href = "./auth.html";
         } finally {
           document.getElementById("loading-overlay").classList.add("hidden");
         }
@@ -367,6 +382,9 @@
 
       /** Updates username and email (PATCH/PUT /api/profile) */
       window.updateProfile = async (event) => {
+        // Ensure token exists before sending request
+        if (checkInitialAuth()) return;
+
         addRippleEffect(event);
         const button = document.getElementById("update-profile-btn");
         button.disabled = true;
@@ -384,8 +402,9 @@
             getFetchOptions("PATCH", updateData)
           );
 
-          if (response.status === 401) {
+          if (response.status === 401 || response.status === 403) {
             showMessage("Session expired. Please log in again.", "error");
+            localStorage.removeItem("authToken");
             setTimeout(() => (window.location.href = "./auth.html"), 2000);
             return;
           }
@@ -413,6 +432,8 @@
 
       /** Changes the user's password (POST /api/profile/password) */
       window.changePassword = async (event) => {
+        if (checkInitialAuth()) return;
+
         addRippleEffect(event);
         const button = document.getElementById("change-password-btn");
         button.disabled = true;
@@ -440,8 +461,9 @@
             getFetchOptions("POST", passwordData)
           );
 
-          if (response.status === 401) {
+          if (response.status === 401 || response.status === 403) {
             showMessage("Session expired. Please log in again.", "error");
+            localStorage.removeItem("authToken");
             setTimeout(() => (window.location.href = "./auth.html"), 2000);
             return;
           }
@@ -473,25 +495,33 @@
 
       /** Handles user sign out by removing token and redirecting. */
       window.handleLogout = async () => {
-        console.log(
-          "Simulating Express /api/logout request to clear JWT cookie..."
-        );
+        // We no longer rely on the backend to clear the cookie
+        console.log("Clearing token from Local Storage and redirecting...");
+
+        // 🟢 FIX 5: Clear token from Local Storage
+        localStorage.removeItem("authToken");
+
+        // Optional: Hit the logout endpoint for backend token invalidation (if implemented)
         try {
-          // Use fetch options with credentials to clear the cookie
           await fetch(API_LOGOUT_URL, getFetchOptions("POST"));
         } catch (e) {
           console.warn(
-            "Logout request failed (expected if API is not running), proceeding with client-side redirect."
+            "Logout endpoint unreachable/unnecessary, proceeding with client-side redirect."
           );
         }
+
         window.location.href = "./auth.html";
       };
 
       // Attach ripple effect listener to all vibrant buttons and start fetch
       document.addEventListener("DOMContentLoaded", () => {
+        // Check authentication status immediately when the page loads
+        if (checkInitialAuth()) return;
+
         document.querySelectorAll(".btn-vibrant").forEach((button) => {
           button.addEventListener("click", addRippleEffect);
         });
+        // If checkInitialAuth passed, fetch data
         fetchProfileData();
       });
     </script>
