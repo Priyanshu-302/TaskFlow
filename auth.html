@@ -419,18 +419,27 @@
       showLoginLink.addEventListener("click", slideToLogin);
 
       // --- INTERACTIVE: PASSWORD TOGGLE ---
+      // --- INTERACTIVE: PASSWORD TOGGLE (CORRECTED) ---
       function togglePasswordVisibility(fieldId, buttonElement) {
         const field = document.getElementById(fieldId);
-        const icon = buttonElement.querySelector("span");
+
+        // 🎯 FIX: Find the original <span> container that holds the data-lucide attribute
+        // The button element is the parent of the span you want to modify.
+        const iconContainer = buttonElement.querySelector("span[data-lucide]");
 
         if (field.type === "password") {
           field.type = "text";
-          icon.setAttribute("data-lucide", "eye");
+          if (iconContainer) {
+            iconContainer.setAttribute("data-lucide", "eye");
+          }
         } else {
           field.type = "password";
-          icon.setAttribute("data-lucide", "eye-off");
+          if (iconContainer) {
+            iconContainer.setAttribute("data-lucide", "eye-off");
+          }
         }
-        // Re-render the icon
+
+        // CRITICAL: Re-render the icon to display the new attribute state
         lucide.createIcons();
       }
 
