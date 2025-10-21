@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow: The Secure To-Do List</title>
+    <!-- PWA MANIFEST LINK (CRITICAL) -->
+    <link rel="manifest" href="./manifest.json" />
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#B800FF",
+              secondary: "#8A2BE2",
+              vibrant: "#00FFC2",
+              "dark-bg": "#0D0D1A",
+              "card-bg": "#1B1B33",
+              "text-light": "#EBEBF2",
+              success: "#00FFC2",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            keyframes: {
+              "flow-bg": {
+                "0%": { backgroundPosition: "0% 50%" },
+                "50%": { backgroundPosition: "100% 50%" },
+                "100%": { backgroundPosition: "0% 50%" },
+              },
+              "border-pulse-glow": {
+                "0%, 100%": {
+                  boxShadow: "0 0 15px 2px rgba(184, 0, 255, 0.4)",
+                },
+                "50%": { boxShadow: "0 0 40px 10px rgba(0, 255, 194, 0.6)" },
+              },
+            },
+            animation: {
+              "dynamic-bg": "flow-bg 20s ease infinite",
+              "border-glow-slow": "border-pulse-glow 6s ease-in-out infinite",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Inter Font Import -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+    />
+    <style>
+      /* Custom CSS for a dynamic, non-basic background */
+      #hero-section {
+          background: linear-gradient(135deg, #1B1B33, #0D0D1A, #1B1B33, #0D0D1A);
+          background-size: 400% 400%;
+          animation: dynamic-bg 20s ease infinite;
+      }
+
+      /* Glassmorphism Header Effect */
+      #main-header {
+          background-color: rgba(27, 27, 51, 0.8);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(184, 0, 255, 0.3);
+      }
+
+      .cta-button {
+          transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+          background: linear-gradient(90deg, #B800FF 0%, #00FFC2 100%);
+          box-shadow: 0 8px 30px rgba(184, 0, 255, 0.4);
+          border: none;
+      }
+
+      .cta-button:hover {
+          transform: translateY(-5px) scale(1.03);
+          box-shadow: 0 15px 50px rgba(0, 255, 194, 0.8);
+          filter: brightness(1.1);
+      }
+
+      .feature-card {
+          transition: transform 0.4s ease, box-shadow 0.4s ease;
+          animation: border-glow-slow 6s ease-in-out infinite;
+      }
+
+      .feature-card:hover {
+          transform: translateY(-8px) rotateZ(0.8deg);
+          box-shadow: 0 15px 40px rgba(0, 255, 194, 0.3);
+      }
+
+      .fade-in-up {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+      }
+      .fade-in-up.active {
+          opacity: 1;
+          transform: translateY(0);
+      }
+
+      /* Scroll Indicator Styles */
+      #scroll-indicator {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          width: 40px;
+          height: 40px;
+          background: #1B1B33;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.3s, visibility 0.3s;
+          z-index: 100;
+      }
+      #scroll-indicator.visible {
+          opacity: 1;
+          visibility: visible;
+      }
+
+      #scroll-indicator svg {
+          stroke-dasharray: 125.6;
+          stroke-dashoffset: 125.6;
+          transition: stroke-dashoffset 0.1s linear;
+          transform: rotate(-90deg);
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 640px) {
+          .hero-title {
+              font-size: 3rem;
+          }
+          .hero-subtext {
+              font-size: 1.125rem;
+          }
+          .nav-hide-mobile {
+              display: none;
+          }
+      }
+    </style>
+  </head>
+  <body class="bg-dark-bg text-text-light font-sans antialiased">
+    <!-- Header / Navigation (Glassmorphism Effect Applied) -->
+    <header id="main-header" class="sticky top-0 z-50 shadow-2xl">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
+      >
+        <a href="#" class="flex items-center space-x-2 group">
+          <span
+            data-lucide="check-circle-2"
+            class="text-vibrant w-7 h-7 group-hover:rotate-6 transition duration-300"
+          ></span>
+          <span class="text-2xl font-extrabold text-white tracking-tight"
+            >TaskFlow</span
+          >
+          <span class="text-primary text-xs font-mono ml-2 nav-hide-mobile"
+            >v1.0</span
+          >
+        </a>
+        <nav class="space-x-4 sm:space-x-6 flex items-center">
+          <a
+            href="#features"
+            class="text-text-light hover:text-vibrant font-medium transition duration-200 nav-hide-mobile"
+            >Features</a
+          >
+          <a
+            href="#tech"
+            class="text-text-light hover:text-vibrant font-medium transition duration-200 nav-hide-mobile"
+            >Tech Stack</a
+          >
+          <button
+            onclick="window.location.href='./auth.html'"
+            class="px-3 py-2 sm:px-5 sm:py-2 rounded-lg font-semibold text-dark-bg bg-vibrant hover:bg-white transition duration-300 shadow-md hover:shadow-vibrant/50"
+          >
+            Login / Sign Up
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section
+      id="hero-section"
+      class="min-h-[85vh] flex items-center justify-center border-b border-card-bg"
+    >
+      <div class="text-center max-w-4xl px-4 py-20">
+        <span
+          id="tagline"
+          class="inline-block px-4 py-1 mb-4 text-sm font-bold rounded-full bg-primary/20 text-primary uppercase tracking-widest fade-in-up"
+          style="transition-delay: 0.1s"
+        >
+          Secure. Simple. Full-Stack.
+        </span>
+        <h1
+          id="headline"
+          class="hero-title text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-tight fade-in-up"
+          style="transition-delay: 0.3s"
+        >
+          Organize Your Life with
+          <span class="text-vibrant block sm:inline"
+            >Unshakeable Confidence.</span
+          >
+        </h1>
+        <p
+          id="subtext"
+          class="hero-subtext text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto fade-in-up"
+          style="transition-delay: 0.5s"
+        >
+          TaskFlow is the modern to-do list where performance meets impenetrable
+          security. Your data is instantly accessible, highly organized, and
+          protected by a robust, up-to-date architecture designed for the
+          highest standards of web safety.
+        </p>
+        <div
+          id="ctas"
+          class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 fade-in-up"
+          style="transition-delay: 0.7s"
+        >
+          <button
+            id="cta-button"
+            onclick="window.location.href='./auth.html'"
+            class="cta-button w-full sm:w-auto px-8 py-4 text-lg rounded-xl font-bold text-dark-bg transition-all transform"
+          >
+            Start Managing Your Tasks (It's Free!)
+          </button>
+
+          <!-- PWA INSTALL BUTTON (Custom Install Button) -->
+          <button
+            id="install-button"
+            class="hidden px-8 py-4 text-lg rounded-xl font-semibold text-primary border-2 border-primary hover:bg-primary/10 transition-all duration-300"
+          >
+            <span
+              data-lucide="download"
+              class="w-5 h-5 inline-block mr-2"
+            ></span>
+            Install TaskFlow App
+          </button>
+        </div>
+
+        <!-- REMOVED: Currently tracking stats element -->
+      </div>
+    </section>
+
+    <!-- Problem / Solution Section -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h3
+            class="text-sm font-bold text-primary uppercase tracking-wider mb-2"
+          >
+            The Problem
+          </h3>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-6">
+            Traditional To-Do Apps Aren't Private.
+          </h2>
+          <p class="text-base sm:text-lg text-gray-400 mb-6">
+            Many simple list apps treat your personal tasks like disposable
+            data. But your goals, your deadlines, and your private notes deserve
+            more than basic local storage or insecure endpoints.
+          </p>
+
+          <h3
+            class="text-sm font-bold text-vibrant uppercase tracking-wider mb-2 mt-8"
+          >
+            The TaskFlow Solution
+          </h3>
+          <p class="text-base sm:text-lg text-gray-300">
+            We built the application from the ground up prioritizing **user data
+            sovereignty**. Every task is shielded by a dedicated Express.js
+            server, authenticated via ephemeral **JWTs**, and permanently stored
+            in your encrypted MongoDB user space. **Your privacy is the core
+            feature.**
+          </p>
+        </div>
+        <div
+          class="relative h-64 md:h-96 rounded-2xl overflow-hidden bg-card-bg shadow-inner shadow-primary/10"
+        >
+          <div
+            class="absolute inset-0 p-6 text-xs font-mono text-success/80 opacity-70"
+          >
+            <p class="mb-1 text-vibrant">const user = req.user;</p>
+            <p class="mb-1">
+              <span class="text-primary">// Check if token is valid</span>
+            </p>
+            <p class="mb-1 text-primary">
+              if (!user) return res.status(401).send("Unauthorized");
+            </p>
+            <p class="mb-1 text-vibrant">
+              const tasks = await Task.find({ owner: user.id });
+            </p>
+            <p class="mb-1">
+              <span class="text-primary"
+                >// Only retrieve tasks linked to authenticated ID</span
+              >
+            </p>
+            <p class="mb-1 text-success">&gt; Task Security enforced.</p>
+            <div class="mt-8">
+              <div
+                class="h-2 w-full rounded-full bg-primary/20 animate-pulse"
+              ></div>
+              <div class="h-2 w-3/4 mt-2 rounded-full bg-vibrant/20"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Features Section -->
+    <section
+      id="features"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-card-bg/50"
+    >
+      <h2
+        class="text-3xl sm:text-4xl font-extrabold text-white text-center mb-4"
+      >
+        Master Your Workflow
+      </h2>
+      <p class="text-base sm:text-xl text-gray-400 text-center mb-16">
+        The advanced capabilities that keep you productive and organized.
+      </p>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Feature Cards (omitted for brevity, assume correct) -->
+        <div
+          class="feature-card bg-card-bg p-6 rounded-xl border border-primary/20 shadow-xl hover:shadow-primary/50 col-span-1"
+        >
+          <div class="p-3 inline-block rounded-lg bg-primary/20 mb-3">
+            <span
+              data-lucide="calendar-check"
+              class="w-5 h-5 text-primary"
+            ></span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Time Control</h3>
+          <p class="text-gray-400 text-sm">
+            Set **strict deadlines** and see tasks filter automatically into
+            Today, Upcoming, and Overdue views.
+          </p>
+        </div>
+        <div
+          class="feature-card bg-card-bg p-6 rounded-xl border border-vibrant/20 shadow-xl hover:shadow-vibrant/50 col-span-1"
+        >
+          <div class="p-3 inline-block rounded-lg bg-vibrant/20 mb-3">
+            <span data-lucide="trending-up" class="w-5 h-5 text-vibrant"></span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Priority Staging</h3>
+          <p class="text-gray-400 text-sm">
+            Visually flag and sort tasks by **High, Medium, or Low** priority.
+            High-priority tasks glow!
+          </p>
+        </div>
+        <div
+          class="feature-card bg-card-bg p-6 rounded-xl border border-primary/20 shadow-xl hover:shadow-primary/50 col-span-1"
+        >
+          <div class="p-3 inline-block rounded-lg bg-primary/20 mb-3">
+            <span data-lucide="filter" class="w-5 h-5 text-primary"></span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Deep Filtering</h3>
+          <p class="text-gray-400 text-sm">
+            Filter by tags, categories, completion status, and custom projects
+            with a single click.
+          </p>
+        </div>
+        <div
+          class="feature-card bg-card-bg p-6 rounded-xl border border-vibrant/20 shadow-xl hover:shadow-vibrant/50 col-span-1"
+        >
+          <div class="p-3 inline-block rounded-lg bg-vibrant/20 mb-3">
+            <span data-lucide="sitemap" class="w-5 h-5 text-vibrant"></span>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Hierarchical Tasks</h3>
+          <p class="text-gray-400 text-sm">
+            Break down massive goals into nested, manageable **Subtasks** stored
+            as map objects in MongoDB.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA Section (Using the vibrant gradient) -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <div
+        class="p-0.5 rounded-3xl bg-gradient-to-r from-primary to-vibrant shadow-2xl shadow-vibrant/20"
+      >
+        <div
+          class="bg-card-bg p-10 sm:p-16 rounded-[1.4rem] border border-transparent"
+        >
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+            Ready to reclaim your focus?
+          </h2>
+          <p class="text-lg text-gray-400 mb-8">
+            Stop juggling paper lists and use the modern, secure solution for
+            task management. Create your free account today.
+          </p>
+          <button
+            onclick="window.location.href='./auth.html'"
+            class="cta-button w-full sm:w-auto px-10 py-4 text-xl rounded-xl font-bold text-dark-bg transition-all duration-300 transform"
+          >
+            Get Started Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-card-bg border-t border-dark-bg">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-500"
+      >
+        <p>
+          &copy; 2025 TaskFlow. All rights reserved. | Crafted with **Express**,
+          **MongoDB**, and an obsession with security.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Scroll Indicator -->
+    <div id="scroll-indicator">
+      <svg viewBox="0 0 40 40" class="w-full h-full">
+        <circle
+          cx="20"
+          cy="20"
+          r="18"
+          fill="none"
+          stroke="#1B1B33"
+          stroke-width="4"
+        ></circle>
+        <circle
+          id="scroll-progress-circle"
+          cx="20"
+          cy="20"
+          r="18"
+          fill="none"
+          stroke="#00FFC2"
+          stroke-width="4"
+        ></circle>
+      </svg>
+      <span class="absolute text-xs font-semibold text-vibrant">
+        <span data-lucide="chevron-up" class="w-4 h-4"></span>
+      </span>
+    </div>
+
+    <!-- JavaScript for Dynamic Interactivity and PWA Registration -->
+    <script>
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      let deferredPrompt; // To hold the install prompt event
+
+      // PWA Installation Prompt Logic
+      const installButton = document.getElementById("install-button");
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        // Prevent the default browser prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Show the custom install button
+        installButton.classList.remove("hidden");
+      });
+
+      installButton.addEventListener("click", (e) => {
+        installButton.classList.add("hidden");
+        // Check if we have the deferred prompt event
+        if (deferredPrompt) {
+          // Show the installation prompt
+          deferredPrompt.prompt();
+          // Wait for the user to respond to the prompt
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === "accepted") {
+              console.log("User accepted the A2HS prompt");
+            } else {
+              console.log("User dismissed the A2HS prompt");
+            }
+            deferredPrompt = null; // Clear the event
+          });
+        }
+      });
+
+      // Event handler when the app is successfully installed
+      window.addEventListener("appinstalled", (e) => {
+        installButton.classList.add("hidden");
+        console.log("PWA installed successfully!");
+      });
+
+      // REMOVED: Dynamic Task Counter JS block
+
+      // 2. Simple Scroll Animation on the Hero Section
+      const hero = document.getElementById("hero-section");
+      const scrollIndicator = document.getElementById("scroll-indicator");
+      const progressCircle = document.getElementById("scroll-progress-circle");
+      const circumference = 113.1;
+
+      window.addEventListener("scroll", () => {
+        const scrollPos = window.scrollY;
+
+        // Hero Section Effects (scale and dim)
+        const scaleFactor = 1 - scrollPos * 0.0005;
+        hero.style.transform = `scale(${Math.max(0.95, scaleFactor)})`;
+        const opacityFactor = 1 - scrollPos * 0.001;
+        hero.style.opacity = Math.max(0.4, opacityFactor);
+
+        // Scroll Indicator Logic
+        const totalHeight =
+          document.documentElement.scrollHeight -
+          document.documentElement.clientHeight;
+        const progress = scrollPos / totalHeight;
+        const offset = circumference * (1 - progress);
+
+        if (scrollPos > 100) {
+          scrollIndicator.classList.add("visible");
+        } else {
+          scrollIndicator.classList.remove("visible");
+        }
+        progressCircle.style.strokeDashoffset = offset;
+      });
+
+      // 3. Text Fade-In Animation on Load
+      window.addEventListener("load", () => {
+        const elementsToAnimate = [
+          document.getElementById("tagline"),
+          document.getElementById("headline"),
+          document.getElementById("subtext"),
+          document.getElementById("ctas"),
+          // REMOVED: document.getElementById('stats')
+        ].filter((el) => el);
+
+        elementsToAnimate.forEach((el) => {
+          const delay = parseFloat(el.style.transitionDelay || "0s") * 1000;
+          setTimeout(() => {
+            el.classList.add("active");
+          }, delay);
+        });
+
+        // PWA Service Worker Registration
+        if ("serviceWorker" in navigator) {
+          console.warn(
+            "PWA Registration is failing due to sandbox environment. Please register manually via the console:"
+          );
+          console.info(
+            "navigator.serviceWorker.register('/sw.js').then(r => console.log('Registered!', r)).catch(e => console.error('Manual Reg Failed:', e))"
+          );
+        }
+      });
+
+      // 4. Scroll Indicator Click to Top
+      scrollIndicator.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    </script>
+  </body>
+</html>

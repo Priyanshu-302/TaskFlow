@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow: Secure Login</title>
+    <link rel="manifest" href="./manifest.json" />
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#B800FF", // Electric Purple/Magenta
+              vibrant: "#00FFC2", // Electric Teal/Mint
+              "dark-bg": "#0D0D1A", // Deep Near-Black Background
+              "card-bg": "#1B1B33", // Polished Card Surface
+              "text-light": "#EBEBF2",
+              success: "#10B981", // For message box
+              error: "#dc2626", // For message box
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            keyframes: {
+              // Keyframe for the button ripple effect
+              "ripple-animation": {
+                to: {
+                  transform: "scale(4)",
+                  opacity: 0,
+                },
+              },
+            },
+            animation: {
+              ripple: "ripple-animation 0.6s linear",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Inter Font Import -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+    />
+    <style>
+      /* General body styling */
+      body {
+        background-color: #0d0d1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow: hidden; /* Hide horizontal overflow during slide */
+      }
+
+      /* The main container for the sliding mechanism */
+      #slide-container {
+        width: 400px; /* Fixed width for the visible part */
+        height: 620px; /* Adjusted height to fit new field */
+        overflow: hidden; /* Crucial for clipping the sliding wrapper */
+        box-shadow: 0 10px 60px rgba(0, 255, 194, 0.2);
+        border-radius: 20px;
+        background-color: #1b1b33;
+        position: relative;
+      }
+
+      /* Wrapper containing both the Login and Signup panels */
+      #slide-wrapper {
+        width: 800px; /* 2 * 400px */
+        height: 100%;
+        display: flex;
+        transition: transform 0.6s cubic-bezier(0.8, 0, 0.2, 1); /* Smooth, premium slide effect */
+      }
+
+      /* Individual form panels */
+      .form-panel {
+        width: 400px; /* Each panel takes up half the wrapper */
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      /* Classes toggled by JavaScript */
+      .slide-to-signup #slide-wrapper {
+        transform: translateX(-400px); /* Moves left to show signup panel */
+      }
+
+      /* Input and Button Styling */
+      .custom-input {
+        background-color: #0d0d1a;
+        border: 1px solid #1b1b33;
+        transition: all 0.3s;
+        color: #ebebf2; /* Ensure text is visible */
+      }
+
+      /* ENHANCED INTERACTIVITY: Input Focus Glow */
+      .custom-input:focus {
+        border-color: #b800ff;
+        box-shadow: 0 0 0 2px rgba(184, 0, 255, 0.5),
+          0 0 20px rgba(184, 0, 255, 0.3); /* Enhanced glow */
+        outline: none;
+      }
+
+      .submit-button {
+        transition: all 0.3s;
+        background: linear-gradient(90deg, #b800ff 0%, #00ffc2 100%);
+        box-shadow: 0 4px 20px rgba(0, 255, 194, 0.2);
+        position: relative; /* Needed for ripple effect */
+        overflow: hidden; /* Needed for ripple effect */
+      }
+
+      .submit-button:hover {
+        box-shadow: 0 8px 30px rgba(0, 255, 194, 0.5);
+        transform: translateY(-2px);
+      }
+
+      /* Loading Spinner/Text styling */
+      .loading-spinner {
+        pointer-events: none;
+        opacity: 0;
+      }
+      .loading-spinner.active {
+        opacity: 1;
+      }
+
+      .submit-button .button-text {
+        transition: opacity 0.3s;
+      }
+
+      .submit-button.loading .button-text {
+        opacity: 0;
+      }
+
+      /* RIPPLE EFFECT CSS */
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.4
+        ); /* White transparent ripple */
+      }
+
+      /* The switch links remain the same */
+      .switch-link {
+        color: #00ffc2;
+        cursor: pointer;
+        font-weight: 600;
+        transition: color 0.3s;
+      }
+
+      .switch-link:hover {
+        color: #b800ff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main Sliding Interface Container -->
+    <div id="slide-container">
+      <div id="slide-wrapper">
+        <!-- ============================================== -->
+        <!-- LOGIN PANEL (Left Side) -->
+        <!-- ============================================== -->
+        <div class="form-panel" id="login-panel">
+          <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
+            <span
+              data-lucide="key-round"
+              class="w-7 h-7 text-primary mr-3"
+            ></span>
+            TaskFlow Login
+          </h2>
+          <p class="text-gray-400 mb-8">Access your secure task list.</p>
+
+          <form
+            id="login-form"
+            onsubmit="event.preventDefault(); handleLogin();"
+            class="space-y-6"
+          >
+            <div>
+              <label
+                for="login-email"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Email</label
+              >
+              <input
+                type="email"
+                id="login-email"
+                required
+                class="custom-input w-full p-3 rounded-lg"
+                placeholder="email@example.com"
+              />
+            </div>
+
+            <!-- INTERACTIVE: Password field with toggle button -->
+            <div class="relative">
+              <label
+                for="login-password"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Password</label
+              >
+              <input
+                type="password"
+                id="login-password"
+                required
+                class="custom-input w-full p-3 pr-10 rounded-lg"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
+                onclick="togglePasswordVisibility('login-password', this)"
+              >
+                <span data-lucide="eye-off" class="w-5 h-5"></span>
+              </button>
+            </div>
+
+            <button
+              id="login-submit-btn"
+              type="submit"
+              class="submit-button w-full py-3 rounded-lg font-bold text-dark-bg mt-4 relative overflow-hidden"
+              onclick="createRipple(event)"
+            >
+              <span class="button-text">Login Securely</span>
+              <!-- Interactive: Loading Spinner -->
+              <span
+                id="login-spinner"
+                class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
+              >
+                <span
+                  class="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"
+                ></span>
+              </span>
+            </button>
+          </form>
+
+          <div class="mt-8 text-center text-gray-400">
+            Don't have an account?
+            <a id="show-signup" class="switch-link ml-1">Sign Up</a>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SIGNUP PANEL (Right Side) -->
+        <!-- ============================================== -->
+        <div class="form-panel" id="signup-panel">
+          <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
+            <span
+              data-lucide="user-plus"
+              class="w-7 h-7 text-vibrant mr-3"
+            ></span>
+            Create Account
+          </h2>
+          <p class="text-gray-400 mb-4">Start organizing your life today.</p>
+
+          <form
+            id="signup-form"
+            onsubmit="event.preventDefault(); handleSignup();"
+            class="space-y-3"
+          >
+            <div>
+              <label
+                for="signup-username"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Full Name</label
+              >
+              <input
+                type="text"
+                id="signup-username"
+                required
+                class="custom-input w-full p-3 rounded-lg"
+                placeholder="John Doe"
+              />
+            </div>
+            <div>
+              <label
+                for="signup-email"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Email</label
+              >
+              <input
+                type="email"
+                id="signup-email"
+                required
+                class="custom-input w-full p-3 rounded-lg"
+                placeholder="email@example.com"
+              />
+            </div>
+
+            <!-- INTERACTIVE: Password field with toggle button -->
+            <div class="relative">
+              <label
+                for="signup-password"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Password</label
+              >
+              <input
+                type="password"
+                id="signup-password"
+                required
+                class="custom-input w-full p-3 pr-10 rounded-lg"
+                placeholder="Minimum 8 characters"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
+                onclick="togglePasswordVisibility('signup-password', this)"
+              >
+                <span data-lucide="eye-off" class="w-5 h-5"></span>
+              </button>
+            </div>
+
+            <!-- INTERACTIVE: Confirm Password field with toggle button -->
+            <div class="relative">
+              <label
+                for="confirm-password"
+                class="block text-sm font-medium text-text-light mb-1"
+                >Confirm Password</label
+              >
+              <input
+                type="password"
+                id="confirm-password"
+                required
+                class="custom-input w-full p-3 pr-10 rounded-lg"
+                placeholder="Re-enter password"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
+                onclick="togglePasswordVisibility('confirm-password', this)"
+              >
+                <span data-lucide="eye-off" class="w-5 h-5"></span>
+              </button>
+            </div>
+
+            <button
+              id="signup-submit-btn"
+              type="submit"
+              class="submit-button w-full py-3 rounded-lg font-bold text-dark-bg mt-4 relative overflow-hidden"
+              onclick="createRipple(event)"
+            >
+              <span class="button-text">Sign Up</span>
+              <!-- Interactive: Loading Spinner -->
+              <span
+                id="signup-spinner"
+                class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
+              >
+                <span
+                  class="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"
+                ></span>
+              </span>
+            </button>
+          </form>
+
+          <div class="mt-3 text-center text-gray-400">
+            Already a member?
+            <a id="show-login" class="switch-link ml-1">Login</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Box (Instead of alert()) -->
+    <div
+      id="message-box"
+      class="fixed top-0 left-1/2 -translate-x-1/2 mt-4 p-4 rounded-lg shadow-xl text-white opacity-0 transition-opacity duration-300 pointer-events-none"
+      style="min-width: 300px; z-index: 200"
+    ></div>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          // This path is relative to the root of your frontend.
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((reg) => {
+              console.log("Service Worker registered! Scope:", reg.scope);
+            })
+            .catch((err) => {
+              console.error("Service Worker registration failed:", err);
+            });
+        });
+      }
+    </script>
+
+    <!-- JavaScript for Dynamic Interactivity -->
+    <script>
+      // --- CONFIGURATION ---
+      const API_LOGIN_URL = "http://localhost:3000/api/login";
+      const API_SIGNUP_URL = "http://localhost:3000/api/signup";
+
+      // --- Utility function for API Headers ---
+      const getJsonHeaders = () => {
+        return {
+          "Content-Type": "application/json",
+        };
+      };
+
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      const slideContainer = document.getElementById("slide-container");
+      const showSignupLink = document.getElementById("show-signup");
+      const showLoginLink = document.getElementById("show-login");
+      const messageBox = document.getElementById("message-box");
+
+      const loginForm = document.getElementById("login-form");
+      const signupForm = document.getElementById("signup-form");
+      const loginBtn = document.getElementById("login-submit-btn");
+      const signupBtn = document.getElementById("signup-submit-btn");
+      const loginSpinner = document.getElementById("login-spinner");
+      const signupSpinner = document.getElementById("signup-spinner");
+
+      // --- SLIDING LOGIC ---
+      function slideToSignup() {
+        slideContainer.classList.add("slide-to-signup");
+      }
+
+      function slideToLogin() {
+        slideContainer.classList.remove("slide-to-signup");
+      }
+
+      showSignupLink.addEventListener("click", slideToSignup);
+      showLoginLink.addEventListener("click", slideToLogin);
+
+      // --- INTERACTIVE: PASSWORD TOGGLE ---
+      function togglePasswordVisibility(fieldId, buttonElement) {
+        const field = document.getElementById(fieldId);
+        const icon = buttonElement.querySelector("span");
+
+        if (field.type === "password") {
+          field.type = "text";
+          icon.setAttribute("data-lucide", "eye");
+        } else {
+          field.type = "password";
+          icon.setAttribute("data-lucide", "eye-off");
+        }
+        // Re-render the icon
+        lucide.createIcons();
+      }
+
+      // --- INTERACTIVE: BUTTON RIPPLE EFFECT ---
+      function createRipple(event) {
+        const button = event.currentTarget;
+        const circle = document.createElement("span");
+        const diameter = Math.max(button.clientWidth, button.clientHeight);
+        const radius = diameter / 2;
+
+        // Position the ripple where the click occurred
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${
+          event.clientX - (button.getBoundingClientRect().left + radius)
+        }px`;
+        circle.style.top = `${
+          event.clientY - (button.getBoundingClientRect().top + radius)
+        }px`;
+        circle.classList.add("ripple", "absolute");
+
+        // Remove existing ripples to avoid clutter
+        const oldRipple = button.querySelector(".ripple");
+        if (oldRipple) {
+          oldRipple.remove();
+        }
+
+        button.appendChild(circle);
+      }
+
+      // --- MESSAGE BOX (Custom Alert Replacement) ---
+      function showMessage(message, isError = false) {
+        messageBox.textContent = message;
+
+        // Set colors based on success or error
+        messageBox.style.backgroundColor = isError ? "#dc2626" : "#10B981";
+        messageBox.style.boxShadow = isError
+          ? "0 0 15px rgba(220, 38, 38, 0.5)"
+          : "0 0 15px rgba(16, 185, 129, 0.5)";
+
+        messageBox.style.opacity = 1;
+        messageBox.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+          messageBox.style.opacity = 0;
+          messageBox.style.pointerEvents = "none";
+        }, 3000);
+      }
+
+      // --- INTERACTIVE: LOADING STATE HANDLERS ---
+      function setLoading(button, spinner, isLoading) {
+        button.disabled = isLoading;
+        button.classList.toggle("loading", isLoading);
+        spinner.classList.toggle("active", isLoading);
+      }
+
+      // --- UPDATED HANDLERS WITH FETCH API INTEGRATION ---
+
+      async function handleLogin() {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+
+        if (!loginForm.checkValidity() || password.length < 8) {
+          showMessage(
+            "Please enter a valid email and a password of at least 8 characters.",
+            true
+          );
+          return;
+        }
+
+        setLoading(loginBtn, loginSpinner, true);
+
+        const loginData = { email, password };
+        console.log("Sending Login Data:", loginData);
+
+        try {
+          // FIX: Added credentials: 'include'
+          const response = await fetch(API_LOGIN_URL, {
+            method: "POST",
+            headers: getJsonHeaders(),
+            body: JSON.stringify(loginData),
+            credentials: "include",
+          });
+
+          // Simulate network latency (since fetch might be instant on localhost)
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          const responseData = await response
+            .json()
+            .catch(() => ({ message: "Could not parse JSON response." }));
+
+          if (response.ok) {
+            // SUCCESS: Express should send a JWT token via HttpOnly Cookie (or in the response body)
+            showMessage(`Login successful! Redirecting to dashboard...`, false);
+            console.log(
+              "Expected Success Response Data (JWT info):",
+              responseData
+            );
+
+            // UNCOMMENT THIS LINE FOR FINAL APP:
+            setTimeout(() => (window.location.href = "./dashboard.html"), 500);
+          } else if (response.status === 401 || response.status === 403) {
+            // FAILURE: Authentication or Authorization error
+            showMessage(`Login failed: Invalid email or password.`, true);
+            console.error(
+              "Estimated Failure Response (401/403):",
+              responseData
+            );
+          } else {
+            // GENERIC FAILURE
+            showMessage(`Login failed. Server Error: ${response.status}`, true);
+            console.error("Estimated Server Error Response:", responseData);
+          }
+        } catch (error) {
+          // NETWORK ERROR
+          showMessage(
+            `Connection error. Is your Express backend running on ${API_LOGIN_URL}?`,
+            true
+          );
+          console.error("Fetch/Network Error:", error);
+        } finally {
+          setLoading(loginBtn, loginSpinner, false);
+        }
+      }
+
+      async function handleSignup() {
+        // NEW: Get username from the form
+        const username = document.getElementById("signup-username").value;
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        const confirmPassword =
+          document.getElementById("confirm-password").value;
+
+        if (!signupForm.checkValidity() || password.length < 8) {
+          showMessage(
+            "Please ensure all fields are valid and password is at least 8 characters.",
+            true
+          );
+          return;
+        }
+        if (username.trim().length === 0) {
+          showMessage("Please enter your full name.", true);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showMessage("Passwords do not match. Please check.", true);
+          return;
+        }
+
+        setLoading(signupBtn, signupSpinner, true);
+
+        // NEW: Include username in signup data
+        const signupData = { email, password, username };
+        console.log("Sending Signup Data:", signupData);
+
+        try {
+          // FIX: Added credentials: 'include'
+          const response = await fetch(API_SIGNUP_URL, {
+            method: "POST",
+            headers: getJsonHeaders(),
+            body: JSON.stringify(signupData),
+            credentials: "include",
+          });
+
+          // Simulate network latency
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          const responseData = await response
+            .json()
+            .catch(() => ({ message: "Could not parse JSON response." }));
+
+          if (response.ok || response.status === 201) {
+            // SUCCESS: Express should return success status (200 or 201)
+            showMessage(`User registered successfully! Please log in.`, false);
+            console.log("Expected Success Response Data:", responseData);
+
+            // Slide back to login after successful signup
+            setTimeout(slideToLogin, 500);
+          } else if (response.status === 409) {
+            // FAILURE: Conflict (e.g., email already exists)
+            showMessage(
+              `Signup failed: That email is already registered.`,
+              true
+            );
+            console.error(
+              "Estimated Failure Response (409 Conflict):",
+              responseData
+            );
+          } else {
+            // GENERIC FAILURE
+            showMessage(
+              `Signup failed. Server Error: ${response.status}`,
+              true
+            );
+            console.error("Estimated Server Error Response:", responseData);
+          }
+        } catch (error) {
+          // NETWORK ERROR
+          showMessage(
+            `Connection error. Is your Express backend running on ${API_SIGNUP_URL}?`,
+            true
+          );
+          console.error("Fetch/Network Error:", error);
+        } finally {
+          setLoading(signupBtn, signupSpinner, false);
+        }
+      }
+    </script>
+  </body>
+</html>

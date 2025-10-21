@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow: User Profile</title>
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#B800FF",
+              vibrant: "#00FFC2",
+              "dark-bg": "#0D0D1A",
+              "card-bg": "#1B1B33",
+              "text-light": "#EBEBF2",
+              completed: "#10B981",
+              error: "#dc2626",
+              success: "#10b981",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            keyframes: {
+              ripple: {
+                "0%": { transform: "scale(0)", opacity: "1" },
+                "100%": { transform: "scale(4)", opacity: "0" },
+              },
+              fadeInUp: {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+            },
+            animation: {
+              ripple: "ripple 0.6s linear forwards",
+              fadeInUp: "fadeInUp 0.5s ease-out forwards",
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+    />
+    <style>
+      body {
+        background-color: #0d0d1a;
+        min-height: 100vh;
+      }
+      .form-card {
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+      .logout-button {
+        transition: all 0.3s;
+        background-color: transparent;
+        border: 1px solid #b800ff;
+        color: #b800ff;
+      }
+      .logout-button:hover {
+        background-color: #b800ff;
+        color: #1b1b33;
+        box-shadow: 0 0 15px rgba(184, 0, 255, 0.5);
+      }
+      .btn-vibrant {
+        position: relative;
+        overflow: hidden;
+      }
+      .ripple-effect {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        animation: ripple 0.6s linear forwards;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body class="text-text-light font-sans">
+    <!-- Loading Overlay -->
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-dark-bg/95 backdrop-blur-sm flex flex-col items-center justify-center z-50 transition-opacity duration-500"
+    >
+      <p class="text-lg text-vibrant font-semibold">Fetching Profile...</p>
+    </div>
+
+    <!-- Message Box -->
+    <div
+      id="message-box"
+      class="hidden fixed top-0 left-0 right-0 p-4 text-white text-center z-40"
+    ></div>
+
+    <!-- Header / Navigation -->
+    <header class="bg-card-bg shadow-lg sticky top-0 z-10">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-2">
+          <span class="text-xl font-extrabold text-white tracking-tight"
+            >Profile Settings</span
+          >
+        </div>
+        <div class="flex items-center space-x-4">
+          <a
+            href="dashboard.html"
+            class="text-gray-400 hover:text-vibrant transition duration-200 flex items-center"
+          >
+            Dashboard
+          </a>
+          <button
+            class="logout-button px-4 py-2 rounded-lg font-semibold text-sm"
+            onclick="handleLogout()"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1
+        class="text-4xl font-bold text-white mb-8 border-b border-primary/20 pb-4"
+      >
+        Account Management
+      </h1>
+
+      <!-- User Information Card -->
+      <div
+        class="bg-card-bg p-8 rounded-xl mb-12 shadow-2xl form-card border-l-4 border-vibrant"
+      >
+        <h2 class="text-2xl font-semibold mb-6 text-vibrant flex items-center">
+          Current User Details
+        </h2>
+        <div class="space-y-4">
+          <div class="flex justify-between border-b border-dark-bg pb-2">
+            <span class="text-gray-400">Username:</span>
+            <span id="display-username" class="font-bold text-text-light"
+              >Loading...</span
+            >
+          </div>
+          <div class="flex justify-between border-b border-dark-bg pb-2">
+            <span class="text-gray-400">Email:</span>
+            <span id="display-email" class="font-bold text-text-light"
+              >Loading...</span
+            >
+          </div>
+          <div class="flex justify-between pt-2">
+            <span class="text-gray-400">Member Since:</span>
+            <span id="display-date" class="font-bold text-text-light"
+              >Loading...</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Update Profile Form -->
+      <div class="bg-card-bg p-8 rounded-xl mb-12 shadow-2xl form-card">
+        <h2 class="text-2xl font-semibold mb-6 text-primary flex items-center">
+          Update Profile Info
+        </h2>
+        <form
+          id="update-profile-form"
+          onsubmit="event.preventDefault(); updateProfile(event);"
+        >
+          <div class="space-y-4">
+            <input
+              type="text"
+              id="new-username"
+              placeholder="New Username"
+              required
+              class="w-full p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
+            />
+            <input
+              type="email"
+              id="new-email"
+              placeholder="New Email"
+              required
+              class="w-full p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
+            />
+          </div>
+          <button
+            type="submit"
+            id="update-profile-btn"
+            class="btn-vibrant w-full mt-6 px-6 py-3 rounded-lg font-bold text-dark-bg bg-vibrant hover:bg-vibrant/80 transition duration-300 shadow-md hover:shadow-vibrant/50 flex items-center justify-center"
+          >
+            Update Info
+          </button>
+        </form>
+      </div>
+
+      <!-- Change Password Form -->
+      <div class="bg-card-bg p-8 rounded-xl shadow-2xl form-card">
+        <h2 class="text-2xl font-semibold mb-6 text-primary flex items-center">
+          <span data-lucide="key" class="w-6 h-6 mr-3"></span>
+          Change Password
+        </h2>
+        <form
+          id="change-password-form"
+          onsubmit="event.preventDefault(); changePassword(event);"
+        >
+          <div class="space-y-4">
+            <input
+              type="password"
+              id="current-password"
+              placeholder="Current Password"
+              required
+              class="w-full p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
+            />
+            <input
+              type="password"
+              id="new-password"
+              placeholder="New Password (min 6 chars)"
+              required
+              class="w-full p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
+            />
+            <input
+              type="password"
+              id="confirm-password"
+              placeholder="Confirm New Password"
+              required
+              class="w-full p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
+            />
+          </div>
+          <button
+            type="submit"
+            id="change-password-btn"
+            class="btn-vibrant w-full mt-6 px-6 py-3 rounded-lg font-bold text-dark-bg bg-vibrant hover:bg-vibrant/80 transition duration-300 shadow-md hover:shadow-vibrant/50 flex items-center justify-center"
+          >
+            Change Password
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <!-- JAVASCRIPT: Frontend Logic (Express/MongoDB Ready) -->
+    <script type="text/javascript">
+      // --- CONFIGURATION ---
+      const API_PROFILE_URL = "http://localhost:3000/api/profile";
+      const API_PASSWORD_URL = "http://localhost:3000/api/profile/password";
+      const API_LOGOUT_URL = "http://localhost:3000/api/logout";
+
+      // NOTE: The Authorization header is only needed because the browser doesn't automatically
+      // send the cookie for the initial fetch on localhost, even with credentials: 'include'.
+      // This JWT placeholder is removed in favor of relying on the cookie, which is better practice.
+      const DUMMY_JWT = "frontend_auth_placeholder";
+
+      /** * Retrieves the Authorization header with the JWT token. */
+      const getAuthHeaders = (contentType = "application/json") => {
+        return {
+          "Content-Type": contentType,
+          // In a secure application, this header isn't strictly necessary
+          // when using HttpOnly cookies, but we use it for completeness.
+          Authorization: `Bearer ${DUMMY_JWT}`,
+          credentials: "include",
+        };
+      };
+
+      /** * Retrieves fetch options with credentials. */
+      const getFetchOptions = (method, data = null) => {
+        const options = {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // CRITICAL: Ensures cookie is sent
+        };
+        if (data) options.body = JSON.stringify(data);
+        return options;
+      };
+
+      // --- UTILITY FUNCTIONS ---
+
+      /** Shows a temporary message box for success or error feedback */
+      const showMessage = (message, type = "success") => {
+        const box = document.getElementById("message-box");
+        box.textContent = message;
+        box.classList.remove("hidden", "bg-error", "bg-success");
+        box.classList.add(type === "success" ? "bg-success" : "bg-error");
+        setTimeout(() => {
+          box.classList.add("hidden");
+        }, 5000);
+      };
+
+      /** Adds a click ripple effect to buttons */
+      const addRippleEffect = (event) => {
+        const button = event.currentTarget;
+        const ripple = document.createElement("span");
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.className = "ripple-effect";
+
+        button.appendChild(ripple);
+        // Remove ripple after animation
+        ripple.addEventListener("animationend", () => {
+          ripple.remove();
+        });
+      };
+
+      /** Updates the UI elements based on the fetched profile object */
+      const updateUIWithProfileData = (profile) => {
+        // Extract and display the first name only
+        const displayName = profile.username
+          ? profile.username.split(" ")[0]
+          : "User";
+
+        document.getElementById("display-username").textContent =
+          profile.username || displayName;
+        document.getElementById("display-email").textContent = profile.email;
+
+        const date = new Date(profile.createdAt || profile.memberSince);
+        document.getElementById("display-date").textContent =
+          date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+        // Set form placeholders to current values for better UX
+        document.getElementById("new-username").value = profile.username || "";
+        document.getElementById("new-email").value = profile.email;
+      };
+
+      // --- API INTEGRATION FUNCTIONS ---
+
+      /** Fetches current user profile data (GET /api/profile) */
+      window.fetchProfileData = async () => {
+        document.getElementById("loading-overlay").classList.remove("hidden");
+
+        try {
+          // Fetch request now uses the secure getFetchOptions
+          const response = await fetch(API_PROFILE_URL, getFetchOptions("GET"));
+
+          if (response.status === 401 || response.status === 403) {
+            // Unauthorized/Forbidden: Session is invalid
+            window.location.href = "./auth.html";
+            return;
+          }
+          if (!response.ok) {
+            const errorJson = await response.json().catch(() => ({}));
+            throw new Error(
+              errorJson.message || `HTTP error! status: ${response.status}`
+            );
+          }
+
+          const profile = await response.json();
+          updateUIWithProfileData(profile); // Populate fields with real DB data
+        } catch (error) {
+          console.error("Failed to fetch profile data:", error);
+          showMessage(
+            `Failed to load profile: ${
+              error.message || "Check API connection."
+            }`,
+            "error"
+          );
+        } finally {
+          document.getElementById("loading-overlay").classList.add("hidden");
+        }
+      };
+
+      /** Updates username and email (PATCH/PUT /api/profile) */
+      window.updateProfile = async (event) => {
+        addRippleEffect(event);
+        const button = document.getElementById("update-profile-btn");
+        button.disabled = true;
+        button.innerHTML =
+          '<span class="animate-spin h-5 w-5 border-2 border-dark-bg border-t-transparent rounded-full mr-2"></span> Updating...';
+
+        const newUsername = document.getElementById("new-username").value;
+        const newEmail = document.getElementById("new-email").value;
+
+        const updateData = { username: newUsername, email: newEmail };
+
+        try {
+          const response = await fetch(
+            API_PROFILE_URL,
+            getFetchOptions("PATCH", updateData)
+          );
+
+          if (response.status === 401) {
+            showMessage("Session expired. Please log in again.", "error");
+            setTimeout(() => (window.location.href = "./auth.html"), 2000);
+            return;
+          }
+
+          if (!response.ok) {
+            const errorJson = await response.json().catch(() => ({}));
+            throw new Error(
+              errorJson.message || `HTTP error! status: ${response.status}`
+            );
+          }
+
+          showMessage("Profile updated successfully!");
+          await fetchProfileData(); // Refresh UI
+        } catch (error) {
+          console.error("Profile Update Error:", error);
+          showMessage(
+            `Update Failed: ${error.message || "Server error."}`,
+            "error"
+          );
+        } finally {
+          button.disabled = false;
+          button.innerHTML = "Update Info";
+        }
+      };
+
+      /** Changes the user's password (POST /api/profile/password) */
+      window.changePassword = async (event) => {
+        addRippleEffect(event);
+        const button = document.getElementById("change-password-btn");
+        button.disabled = true;
+        button.innerHTML =
+          '<span class="animate-spin h-5 w-5 border-2 border-dark-bg border-t-transparent rounded-full mr-2"></span> Changing...';
+
+        const currentPassword =
+          document.getElementById("current-password").value;
+        const newPassword = document.getElementById("new-password").value;
+        const confirmPassword =
+          document.getElementById("confirm-password").value;
+
+        if (newPassword !== confirmPassword) {
+          showMessage("New passwords do not match.", "error");
+          button.disabled = false;
+          button.innerHTML = "Change Password";
+          return;
+        }
+
+        const passwordData = { currentPassword, newPassword };
+
+        try {
+          const response = await fetch(
+            API_PASSWORD_URL,
+            getFetchOptions("POST", passwordData)
+          );
+
+          if (response.status === 401) {
+            showMessage("Session expired. Please log in again.", "error");
+            setTimeout(() => (window.location.href = "./auth.html"), 2000);
+            return;
+          }
+
+          if (!response.ok) {
+            const errorJson = await response.json().catch(() => ({}));
+            throw new Error(
+              errorJson.message || `HTTP error! status: ${response.status}`
+            );
+          }
+
+          showMessage(
+            "Password changed successfully! Please login again.",
+            "success"
+          );
+          document.getElementById("change-password-form").reset();
+          setTimeout(() => handleLogout(), 2500); // Force relogin after password change
+        } catch (error) {
+          console.error("Password Change Error:", error);
+          showMessage(
+            `Password Change Failed: ${error.message || "Server error."}`,
+            "error"
+          );
+        } finally {
+          button.disabled = false;
+          button.innerHTML = "Change Password";
+        }
+      };
+
+      /** Handles user sign out by removing token and redirecting. */
+      window.handleLogout = async () => {
+        console.log(
+          "Simulating Express /api/logout request to clear JWT cookie..."
+        );
+        try {
+          // Use fetch options with credentials to clear the cookie
+          await fetch(API_LOGOUT_URL, getFetchOptions("POST"));
+        } catch (e) {
+          console.warn(
+            "Logout request failed (expected if API is not running), proceeding with client-side redirect."
+          );
+        }
+        window.location.href = "./auth.html";
+      };
+
+      // Attach ripple effect listener to all vibrant buttons and start fetch
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".btn-vibrant").forEach((button) => {
+          button.addEventListener("click", addRippleEffect);
+        });
+        fetchProfileData();
+      });
+    </script>
+  </body>
+</html>
