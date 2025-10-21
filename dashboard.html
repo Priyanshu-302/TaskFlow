@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+   
   <head>
+       
     <meta charset="UTF-8" />
+       
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+       
     <title>TaskFlow: Dashboard</title>
+       
     <link rel="manifest" href="./manifest.json" />
+       
     <script src="https://cdn.tailwindcss.com"></script>
+       
     <script src="https://unpkg.com/lucide@latest"></script>
+       
     <script>
       tailwind.config = {
         theme: {
@@ -36,245 +44,315 @@
         },
       };
     </script>
+       
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
     />
+       
     <style>
-      body {
-        background-color: #0d0d1a;
-        min-height: 100vh;
-      }
-      .task-card {
-        transition: all 0.3s ease;
-        animation: fadeInUp 0.5s ease-out forwards;
-      }
-      .task-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0, 255, 194, 0.1);
-      }
-      .logout-button {
-        transition: all 0.3s;
-        background-color: transparent;
-        border: 1px solid #b800ff;
-        color: #b800ff;
-      }
-      .logout-button:hover {
-        background-color: #b800ff;
-        color: #1b1b33;
-        box-shadow: 0 0 15px rgba(184, 0, 255, 0.5);
-      }
-      .nav-link {
-        transition: color 0.3s;
-        color: #ebebf2;
-      }
-      .nav-link:hover {
-        color: #00ffc2;
-      }
+            body {
+              background-color: #0d0d1a;
+              min-height: 100vh;
+            }
+            .task-card {
+              transition: all 0.3s ease;
+              animation: fadeInUp 0.5s ease-out forwards;
+            }
+            .task-card:hover {
+              transform: translateY(-4px);
+              box-shadow: 0 10px 20px rgba(0, 255, 194, 0.1);
+            }
+            .logout-button {
+              transition: all 0.3s ease;
+              background-color: transparent;
+              border: 1px solid #b800ff;
+              color: #b800ff;
+            }
+            .logout-button:hover {
+              background-color: #b800ff;
+              color: #1b1b33;
+              box-shadow: 0 0 15px rgba(184, 0, 255, 0.5);
+            }
+            .nav-link {
+              transition: color 0.3s;
+              color: #ebebf2;
+            }
+            .nav-link:hover {
+              color: #00ffc2;
+            }
+         
     </style>
+     
   </head>
+
+   
   <body class="text-text-light font-sans">
+       
     <div
       id="loading-overlay"
       class="fixed inset-0 bg-dark-bg/95 backdrop-blur-sm flex flex-col items-center justify-center z-50 transition-opacity duration-500"
     >
+           
       <span
         class="animate-spin h-10 w-10 border-4 border-vibrant rounded-full border-t-transparent mb-4"
       ></span>
+           
       <p class="text-lg text-vibrant font-semibold">Loading Dashboard...</p>
+         
     </div>
 
+       
     <div
       id="error-message"
       class="hidden fixed top-0 left-0 right-0 p-4 bg-error text-white text-center z-40"
     >
-      API Connection Error. Failed to load tasks. Check your Express server
-      endpoint.
+            API Connection Error. Failed to load tasks. Check your Express
+      server endpoint.    
     </div>
 
+       
     <header class="bg-card-bg shadow-lg sticky top-0 z-10">
+           
       <div
         class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
       >
+               
         <div class="flex items-center space-x-2">
+                   
           <span
             data-lucide="check-circle-2"
             class="text-vibrant w-6 h-6"
           ></span>
+                   
           <span class="text-xl font-extrabold text-white tracking-tight"
             >TaskFlow Dashboard</span
           >
+                 
         </div>
+               
         <div class="flex items-center space-x-4">
+                   
           <a href="profile.html" class="nav-link flex items-center">
-            <span data-lucide="user" class="w-4 h-4 mr-1"></span>
-            Profile
+                        <span data-lucide="user" class="w-4 h-4 mr-1"></span>  
+                      Profile          
           </a>
+                   
           <div class="text-xs text-gray-400 hidden sm:block">
-            Welcome,
+                        Welcome,            
             <span id="user-id-display" class="font-bold text-vibrant break-all"
               >Guest</span
             >
+                     
           </div>
+                   
           <button
             class="logout-button px-4 py-2 rounded-lg font-semibold text-sm"
             onclick="handleLogout()"
           >
+                       
             <span
               data-lucide="log-out"
               class="w-4 h-4 inline-block mr-1"
             ></span>
-            Logout
+                        Logout          
           </button>
+                 
         </div>
+             
       </div>
+         
     </header>
 
+       
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+           
       <h1
         class="text-4xl font-bold text-white mb-8 border-b border-primary/20 pb-4"
       >
-        Today's Focus
+                Today's Focus        
         <span
           data-lucide="zap"
           class="w-8 h-8 text-vibrant inline-block ml-2"
         ></span>
+             
       </h1>
 
+           
       <div class="bg-card-bg p-6 rounded-xl mb-12 shadow-2xl">
+               
         <h2 class="text-xl font-semibold mb-4 text-primary">
-          Quick Add New Task
+                    Quick Add New Task        
         </h2>
+               
         <div
           class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3"
         >
+                   
           <input
             type="text"
             id="task-title-input"
             placeholder="e.g., Build the Express API for /stats endpoint"
             class="flex-grow p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light"
           />
+                   
           <select
             id="task-priority-select"
             class="p-3 rounded-lg bg-dark-bg border border-dark-bg focus:border-vibrant focus:ring-1 focus:ring-vibrant text-text-light w-full sm:w-auto"
           >
+                       
             <option value="High">High Priority</option>
+                       
             <option value="Medium">Medium Priority</option>
+                       
             <option value="Low">Low Priority</option>
+                     
           </select>
+                   
           <button
             onclick="window.addTask()"
             class="px-6 py-3 rounded-lg font-bold text-dark-bg bg-vibrant hover:bg-vibrant/80 transition duration-300 shadow-md hover:shadow-vibrant/50"
           >
-            Add Task
+                        Add Task          
           </button>
+                 
         </div>
+             
       </div>
 
+           
       <div class="grid md:grid-cols-3 gap-8">
+               
         <div class="col-span-2">
+                   
           <h2
             id="active-tasks-count"
             class="text-2xl font-semibold mb-6 text-text-light flex items-center"
           >
-            Active Tasks (0)
+                        Active Tasks (0)            
             <span
               data-lucide="list-todo"
               class="w-5 h-5 ml-2 text-vibrant"
             ></span>
+                     
           </h2>
 
+                   
           <div id="task-list" class="space-y-4">
+                       
             <p id="empty-state-message" class="text-gray-500 italic">
-              No tasks found. Start by adding one above!
+                            No tasks found. Start by adding one above!          
+               
             </p>
+                     
           </div>
+                 
         </div>
 
+               
         <div>
+                   
           <h2
             class="text-2xl font-semibold mb-6 text-text-light flex items-center"
           >
-            Statistics
+                        Statistics            
             <span
               data-lucide="bar-chart-3"
               class="w-5 h-5 ml-2 text-primary"
             ></span>
+                     
           </h2>
 
+                   
           <div class="bg-card-bg p-6 rounded-xl shadow-2xl space-y-4">
+                       
             <div class="flex justify-between items-center text-gray-300">
-              <span>Total Tasks:</span>
+                            <span>Total Tasks:</span>              
               <span id="stats-total" class="font-bold text-xl text-vibrant"
                 >0</span
               >
+                         
             </div>
+                       
             <div class="flex justify-between items-center text-gray-300">
-              <span>Completed Tasks:</span>
+                            <span>Completed Tasks:</span>              
               <span id="stats-completed" class="font-bold text-xl text-primary"
                 >0</span
               >
+                         
             </div>
+                       
             <div
               class="flex justify-between items-center text-gray-300 border-t border-dark-bg pt-4"
             >
-              <span>Completion Rate:</span>
+                            <span>Completion Rate:</span>              
               <span id="stats-rate" class="font-bold text-xl text-vibrant"
                 >0%</span
               >
+                         
             </div>
+                     
           </div>
 
+                   
           <div class="mt-8">
+                       
             <h2
               class="text-2xl font-semibold mb-4 text-text-light flex items-center"
             >
-              Task Controls
+                            Task Controls              
               <span
                 data-lucide="settings"
                 class="w-5 h-5 ml-2 text-vibrant"
               ></span>
+                         
             </h2>
+                       
             <button
               class="w-full px-6 py-3 rounded-lg font-bold text-dark-bg bg-vibrant/20 text-vibrant hover:bg-vibrant/40 transition duration-300 shadow-md hover:shadow-vibrant/50"
             >
-              Clear Completed Tasks (Coming Soon)
+                            Clear Completed Tasks (Coming Soon)            
             </button>
+                     
           </div>
+                 
         </div>
+             
       </div>
+         
     </main>
 
+       
     <script type="text/javascript">
       // --- CONFIGURATION ---
-      // 🚀 IMPORTANT: Ensure this API BASE URL points to your Render backend
       const API_BASE_URL = "https://taskflow-api-to12.onrender.com/api/tasks";
       const API_PROFILE_URL =
         "https://taskflow-api-to12.onrender.com/api/profile";
       const API_LOGOUT_URL =
         "https://taskflow-api-to12.onrender.com/api/logout";
 
-      let currentTasks = [];
+      let currentTasks =
+        []; /** 🟢 FIX: Generates options using the Authorization: Bearer header. */
 
-      /** * Generates options for fetch requests.
-       * The credentials: 'include' option is CRITICAL for sending the HttpOnly cookie.
-       */
       const getFetchOptions = (method, data = null) => {
+        const token = localStorage.getItem("authToken");
+
         const options = {
           method: method,
           headers: {
             "Content-Type": "application/json",
-          },
-          credentials: "include",
-        };
+          }, // 🛑 REMOVED: credentials: "include"
+        }; // Attach Authorization header if token exists
+
+        if (token) {
+          options.headers["Authorization"] = `Bearer ${token}`;
+        }
 
         if (data) {
           options.body = JSON.stringify(data);
         }
         return options;
-      };
-
-      // --- UTILITY FUNCTIONS ---
+      }; // --- UTILITY FUNCTIONS ---
 
       const sortTasks = (a, b) => {
         if (a.completed !== b.completed) {
@@ -282,11 +360,8 @@
         }
         const priorityOrder = { High: 3, Medium: 2, Low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
-      };
+      }; /** Renders tasks dynamically to the DOM and updates stats. */
 
-      // --- UI/RENDERING FUNCTIONS (omitted for brevity, assume correct) ---
-
-      /** Renders tasks dynamically to the DOM and updates stats. */
       const renderTasks = (tasks) => {
         const taskList = document.getElementById("task-list");
         const emptyStateMessage = document.getElementById(
@@ -320,33 +395,33 @@
             task.completed ? "opacity-50 line-through" : ""
           }`;
           taskElement.innerHTML = `
-                        <div class="flex items-center flex-grow">
-                            <input type="checkbox" id="task-${task._id}" ${
+                        <div class="flex items-center flex-grow">
+                            <input type="checkbox" id="task-${task._id}" ${
             task.completed ? "checked" : ""
           }
-                                class="form-checkbox h-5 w-5 text-vibrant rounded border-gray-600 bg-dark-bg mr-4 focus:ring-vibrant cursor-pointer"
-                                onchange="window.toggleTaskCompletion('${
-                                  task._id
-                                }', ${!task.completed})">
-                            <span class="font-medium">${task.title}</span>
-                        </div>
-                        <div class="flex items-center space-x-3 ml-4">
-                            <span class="text-xs font-semibold ${
-                              task.priority === "High"
-                                ? "text-primary border-primary/50"
-                                : task.priority === "Medium"
-                                ? "text-vibrant border-vibrant/50"
-                                : "text-gray-500 border-gray-500/50"
-                            } border px-2 py-0.5 rounded-full">
-                                ${task.priority}
-                            </span>
-                            <button onclick="window.deleteTask('${
-                              task._id
-                            }')" class="text-gray-500 hover:text-error transition duration-200">
-                                <span data-lucide="trash-2" class="w-4 h-4"></span>
-                            </button>
-                        </div>
-                    `;
+                                class="form-checkbox h-5 w-5 text-vibrant rounded border-gray-600 bg-dark-bg mr-4 focus:ring-vibrant cursor-pointer"
+                                onchange="window.toggleTaskCompletion('${
+            task._id
+          }', ${!task.completed})">
+                            <span class="font-medium">${task.title}</span>
+                        </div>
+                        <div class="flex items-center space-x-3 ml-4">
+                            <span class="text-xs font-semibold ${
+            task.priority === "High"
+              ? "text-primary border-primary/50"
+              : task.priority === "Medium"
+              ? "text-vibrant border-vibrant/50"
+              : "text-gray-500 border-gray-500/50"
+          } border px-2 py-0.5 rounded-full">
+                                ${task.priority}
+                            </span>
+                            <button onclick="window.deleteTask('${
+            task._id
+          }')" class="text-gray-500 hover:text-error transition duration-200">
+                                <span data-lucide="trash-2" class="w-4 h-4"></span>
+                            </button>
+                        </div>
+                    `;
           taskList.appendChild(taskElement);
         });
         lucide.createIcons();
@@ -357,17 +432,12 @@
             activeCount > 0 || completedCount > 0
           );
         }
-      };
+      }; /** * Fetches the authenticated user's profile data (GET /api/profile). */ // --- EXPRESS API CLIENT FUNCTIONS (All now use Bearer Token) ---
 
-      // --- EXPRESS API CLIENT FUNCTIONS (All now use getFetchOptions) ---
-
-      /** * Fetches the authenticated user's profile data (GET /api/profile). */
       window.fetchProfileData = async () => {
         const displayEl = document.getElementById("user-id-display");
-        // Show loader state
         displayEl.textContent = "Loading...";
 
-        // Use a controller to abort the fetch if it takes too long (4s)
         const controller = new AbortController();
         const signal = controller.signal;
         const timeoutId = setTimeout(() => controller.abort(), 4000);
@@ -382,36 +452,32 @@
           if (response.status === 401 || response.status === 403) {
             // Authentication failed: redirect to login
             console.error("Profile fetch failed: Unauthorized. Redirecting.");
+            localStorage.removeItem("authToken"); // Clear invalid token
             window.location.href = "./auth.html";
             return;
           }
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          const profile = await response.json();
+          const profile = await response.json(); // FIX APPLIED: Split the name and display only the first name
 
-          // FIX APPLIED: Split the name and display only the first name
           const fullName = profile.username || "User";
           const firstName = fullName.split(" ")[0];
 
           displayEl.textContent = firstName;
         } catch (error) {
-          clearTimeout(timeoutId);
+          clearTimeout(timeoutId); // 🛑 CRITICAL FIX: Treat ANY network/fetch error or timeout as unauthenticated
 
-          // 🛑 CRITICAL FIX: Treat ANY network/fetch error or timeout as unauthenticated
-          // to force the login redirect and clear the session loop attempt.
           console.error(
             "Critical failure during profile authentication check. Forcing redirect.",
             error
           );
+          localStorage.removeItem("authToken"); // Clear token on network fail
           window.location.href = "./auth.html";
           return;
-
-          // The original code's complex fallback is replaced by this definitive redirect.
         }
-      };
+      }; /** * Fetches all tasks for the user (GET /api/tasks). */
 
-      /** * Fetches all tasks for the user (GET /api/tasks). */
       window.fetchTasks = async () => {
         document.getElementById("loading-overlay").classList.remove("hidden");
         document.getElementById("error-message").classList.add("hidden");
@@ -421,11 +487,11 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Authentication failed. Redirecting to login.");
+            localStorage.removeItem("authToken"); // Clear invalid token
             window.location.href = "./auth.html";
             return;
           }
           if (!response.ok) {
-            // More robust error handling for general server issues (500s)
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
@@ -445,9 +511,8 @@
         } finally {
           document.getElementById("loading-overlay").classList.add("hidden");
         }
-      };
+      }; /** * Adds a new task (POST /api/tasks). */
 
-      /** * Adds a new task (POST /api/tasks). */
       window.addTask = async () => {
         const titleInput = document.getElementById("task-title-input");
         const prioritySelect = document.getElementById("task-priority-select");
@@ -468,6 +533,7 @@
           if (response.status === 401 || response.status === 403) {
             // Catch 401/403 errors that occur during in-app interaction
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -483,9 +549,8 @@
             "Task creation failed. Check API status.";
           document.getElementById("error-message").classList.remove("hidden");
         }
-      };
+      }; /** * Toggles completion status (PATCH /api/tasks/:id). */
 
-      /** * Toggles completion status (PATCH /api/tasks/:id). */
       window.toggleTaskCompletion = async (taskId, newStatus) => {
         const endpoint = `${API_BASE_URL}/${taskId}`;
         const updateData = { completed: newStatus };
@@ -498,6 +563,7 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -509,9 +575,8 @@
         } catch (e) {
           console.error(`Error sending PATCH request to ${endpoint}:`, e);
         }
-      };
+      }; /** * Deletes a task (DELETE /api/tasks/:id). */
 
-      /** * Deletes a task (DELETE /api/tasks/:id). */
       window.deleteTask = async (taskId) => {
         if (!confirm("Are you sure you want to delete this task?")) return;
 
@@ -521,6 +586,7 @@
 
           if (response.status === 401 || response.status === 403) {
             console.error("Session expired. Redirecting.");
+            localStorage.removeItem("authToken");
             window.location.href = "./auth.html";
             return;
           }
@@ -532,54 +598,41 @@
         } catch (e) {
           console.error(`Error sending DELETE request to ${endpoint}:`, e);
         }
-      };
+      }; /** 🟢 FIX: Check for token immediately on load to prevent flash of content */ // --- INITIALIZATION AND AUTHENTICATION ---
 
-      // --- INITIALIZATION AND AUTHENTICATION ---
-
-      /** Initializes the app by fetching profile and tasks. */
+      const checkInitialAuth = () => {
+        if (!localStorage.getItem("authToken")) {
+          console.log("No token found in Local Storage. Redirecting to login.");
+          window.location.href = "./auth.html";
+        }
+      }; /** Initializes the app by fetching profile and tasks. */
       const initApp = async () => {
-        // Step 1: Attempt to fetch the profile to determine auth status and username.
-        // This is the primary point of failure for the redirect loop.
-        await window.fetchProfileData();
+        // Check auth status immediately before fetching anything
+        checkInitialAuth(); // Step 1: Attempt to fetch the profile to determine auth status and username.
 
-        // Step 2: Only proceed to fetch tasks if authentication was successful.
-        // If fetchProfileData redirected, the rest of this code is ignored.
+        await window.fetchProfileData(); // Step 2: Only proceed to fetch tasks if authentication was successful.
+
         if (
           document.getElementById("user-id-display").textContent !== "Guest"
         ) {
           await window.fetchTasks();
         } else {
-          // If fetchProfileData failed but didn't redirect (e.g., if we caught a different error),
-          // ensure the loader is hidden. (Note: with the fix above, this should always redirect).
           document.getElementById("loading-overlay").classList.add("hidden");
         }
 
         console.log(
           "Dashboard frontend initialized. Ready to connect to Express/MongoDB API."
         );
-      };
+      }; /** Handles user sign out by clearing token and redirecting. */
 
-      /** Handles user sign out by clearing token and redirecting. */
       window.handleLogout = async () => {
-        console.log(
-          "Sending /api/logout request to clear JWT cookie on Render..."
-        );
-        try {
-          // 🚀 IMPORTANT: Use the correct deployed API URL for logout
-          await fetch(API_LOGOUT_URL, {
-            method: "POST",
-            credentials: "include",
-          });
-        } catch (e) {
-          console.warn(
-            "Logout request failed (expected if API is down), proceeding with client-side redirect."
-          );
-        }
+        console.log("Clearing Local Storage token and redirecting..."); // 🟢 FIX: Clear token from Local Storage
+        localStorage.removeItem("authToken"); // No API call needed to clear cookie since we're not using them
         window.location.href = "./auth.html";
-      };
+      }; // Start initialization when the window loads
 
-      // Start initialization when the window loads
       window.onload = initApp;
     </script>
+     
   </body>
 </html>

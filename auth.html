@@ -102,7 +102,6 @@
           0 0 20px rgba(184, 0, 255, 0.3); /* Enhanced glow */
         outline: none;
       }
-
       .submit-button {
         transition: all 0.3s;
         background: linear-gradient(90deg, #b800ff 0%, #00ffc2 100%);
@@ -110,12 +109,10 @@
         position: relative; /* Needed for ripple effect */
         overflow: hidden; /* Needed for ripple effect */
       }
-
       .submit-button:hover {
         box-shadow: 0 8px 30px rgba(0, 255, 194, 0.5);
         transform: translateY(-2px);
       }
-
       /* Loading Spinner/Text styling */
       .loading-spinner {
         pointer-events: none;
@@ -124,15 +121,12 @@
       .loading-spinner.active {
         opacity: 1;
       }
-
       .submit-button .button-text {
         transition: opacity 0.3s;
       }
-
       .submit-button.loading .button-text {
         opacity: 0;
       }
-
       /* RIPPLE EFFECT CSS */
       .ripple {
         position: absolute;
@@ -152,7 +146,7 @@
         color: #00ffc2;
         cursor: pointer;
         font-weight: 600;
-        transition: color 0.3s;
+        transition: colo;
       }
 
       .switch-link:hover {
@@ -167,29 +161,39 @@
       style="min-width: 300px; z-index: 200"
     ></div>
 
+       
     <div id="slide-container">
+           
       <div id="slide-wrapper">
+               
         <div class="form-panel" id="login-panel">
+                   
           <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
+                       
             <span
               data-lucide="key-round"
               class="w-7 h-7 text-primary mr-3"
             ></span>
-            TaskFlow Login
+                        TaskFlow Login          
           </h2>
+                   
           <p class="text-gray-400 mb-8">Access your secure task list.</p>
 
+                   
           <form
             id="login-form"
             onsubmit="event.preventDefault(); handleLogin();"
             class="space-y-6"
           >
+                       
             <div>
+                           
               <label
                 for="login-email"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Email</label
               >
+                           
               <input
                 type="email"
                 id="login-email"
@@ -197,14 +201,18 @@
                 class="custom-input w-full p-3 rounded-lg"
                 placeholder="email@example.com"
               />
+                         
             </div>
 
+                       
             <div class="relative">
+                           
               <label
                 for="login-password"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Password</label
               >
+                           
               <input
                 type="password"
                 id="login-password"
@@ -212,60 +220,80 @@
                 class="custom-input w-full p-3 pr-10 rounded-lg"
                 placeholder="••••••••"
               />
+                           
               <button
                 type="button"
                 class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
                 onclick="togglePasswordVisibility('login-password', this)"
               >
-                <span data-lucide="eye-off" class="w-5 h-5"></span>
+                               
+                <span data-lucide="eye-off" class="w-5 h-5"></span>            
+                 
               </button>
+                         
             </div>
 
+                       
             <button
               id="login-submit-btn"
               type="submit"
               class="submit-button w-full py-3 rounded-lg font-bold text-dark-bg mt-4 relative overflow-hidden"
               onclick="createRipple(event)"
             >
-              <span class="button-text">Login Securely</span>
+                            <span class="button-text">Login Securely</span>    
+                       
               <span
                 id="login-spinner"
                 class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
               >
+                               
                 <span
                   class="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"
                 ></span>
+                             
               </span>
+                         
             </button>
+                     
           </form>
 
+                   
           <div class="mt-8 text-center text-gray-400">
-            Don't have an account?
-            <a id="show-signup" class="switch-link ml-1">Sign Up</a>
+                        Don't have an account?            
+            <a id="show-signup" class="switch-link ml-1">Sign Up</a>          
           </div>
+                 
         </div>
 
+               
         <div class="form-panel" id="signup-panel">
+                   
           <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
+                       
             <span
               data-lucide="user-plus"
               class="w-7 h-7 text-vibrant mr-3"
             ></span>
-            Create Account
+                        Create Account          
           </h2>
+                   
           <p class="text-gray-400 mb-4">Start organizing your life today.</p>
 
+                   
           <form
             id="signup-form"
             onsubmit="event.preventDefault(); handleSignup();"
             class="space-y-3"
           >
+                       
             <div>
+                           
               <label
                 for="signup-username"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Full Name</label
               >
+                           
               <input
                 type="text"
                 id="signup-username"
@@ -273,13 +301,17 @@
                 class="custom-input w-full p-3 rounded-lg"
                 placeholder="John Doe"
               />
+                         
             </div>
+                       
             <div>
+                           
               <label
                 for="signup-email"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Email</label
               >
+                           
               <input
                 type="email"
                 id="signup-email"
@@ -287,14 +319,18 @@
                 class="custom-input w-full p-3 rounded-lg"
                 placeholder="email@example.com"
               />
+                         
             </div>
 
+                       
             <div class="relative">
+                           
               <label
                 for="signup-password"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Password</label
               >
+                           
               <input
                 type="password"
                 id="signup-password"
@@ -302,21 +338,28 @@
                 class="custom-input w-full p-3 pr-10 rounded-lg"
                 placeholder="Minimum 8 characters"
               />
+                           
               <button
                 type="button"
                 class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
                 onclick="togglePasswordVisibility('signup-password', this)"
               >
-                <span data-lucide="eye-off" class="w-5 h-5"></span>
+                               
+                <span data-lucide="eye-off" class="w-5 h-5"></span>            
+                 
               </button>
+                         
             </div>
 
+                       
             <div class="relative">
+                           
               <label
                 for="confirm-password"
                 class="block text-sm font-medium text-text-light mb-1"
                 >Confirm Password</label
               >
+                           
               <input
                 type="password"
                 id="confirm-password"
@@ -324,41 +367,56 @@
                 class="custom-input w-full p-3 pr-10 rounded-lg"
                 placeholder="Re-enter password"
               />
+                           
               <button
                 type="button"
                 class="absolute right-3 top-9 text-gray-500 hover:text-vibrant transition"
                 onclick="togglePasswordVisibility('confirm-password', this)"
               >
-                <span data-lucide="eye-off" class="w-5 h-5"></span>
+                               
+                <span data-lucide="eye-off" class="w-5 h-5"></span>            
+                 
               </button>
+                         
             </div>
 
+                       
             <button
               id="signup-submit-btn"
               type="submit"
               class="submit-button w-full py-3 rounded-lg font-bold text-dark-bg mt-4 relative overflow-hidden"
               onclick="createRipple(event)"
             >
-              <span class="button-text">Sign Up</span>
+                            <span class="button-text">Sign Up</span>            
+               
               <span
                 id="signup-spinner"
                 class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
               >
+                               
                 <span
                   class="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"
                 ></span>
+                             
               </span>
+                         
             </button>
+                     
           </form>
 
+                   
           <div class="mt-3 text-center text-gray-400">
-            Already a member?
-            <a id="show-login" class="switch-link ml-1">Login</a>
+                        Already a member?            
+            <a id="show-login" class="switch-link ml-1">Login</a>          
           </div>
+                 
         </div>
+             
       </div>
+         
     </div>
 
+       
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -375,23 +433,19 @@
       }
     </script>
 
+       
     <script>
-      // 🚨 UPDATED CONFIGURATION: Use your Vercel URL for API calls
-      // The backend should handle the mapping from this public domain to your backend service.
-      // If your backend is NOT on the same domain, change 'https://task-flow-one-ebon.vercel.app'
-      // to the actual deployed backend URL (e.g., 'https://your-backend-api.com').
+      // 🚨 UPDATED CONFIGURATION: Base URL for Render API
       const BASE_URL = "https://taskflow-api-to12.onrender.com";
       const API_LOGIN_URL = `${BASE_URL}/api/login`;
-      const API_SIGNUP_URL = `${BASE_URL}/api/signup`;
+      const API_SIGNUP_URL = `${BASE_URL}/api/signup`; // --- Utility function for API Headers ---
 
-      // --- Utility function for API Headers ---
       const getJsonHeaders = () => {
         return {
           "Content-Type": "application/json",
         };
-      };
+      }; // Initialize Lucide icons
 
-      // Initialize Lucide icons
       lucide.createIcons();
 
       const slideContainer = document.getElementById("slide-container");
@@ -404,9 +458,8 @@
       const loginBtn = document.getElementById("login-submit-btn");
       const signupBtn = document.getElementById("signup-submit-btn");
       const loginSpinner = document.getElementById("login-spinner");
-      const signupSpinner = document.getElementById("signup-spinner");
+      const signupSpinner = document.getElementById("signup-spinner"); // --- SLIDING LOGIC ---
 
-      // --- SLIDING LOGIC ---
       function slideToSignup() {
         slideContainer.classList.add("slide-to-signup");
       }
@@ -416,15 +469,10 @@
       }
 
       showSignupLink.addEventListener("click", slideToSignup);
-      showLoginLink.addEventListener("click", slideToLogin);
+      showLoginLink.addEventListener("click", slideToLogin); // --- INTERACTIVE: PASSWORD TOGGLE ---
 
-      // --- INTERACTIVE: PASSWORD TOGGLE ---
-      // --- INTERACTIVE: PASSWORD TOGGLE (CORRECTED) ---
       function togglePasswordVisibility(fieldId, buttonElement) {
         const field = document.getElementById(fieldId);
-
-        // 🎯 FIX: Find the original <span> container that holds the data-lucide attribute
-        // The button element is the parent of the span you want to modify.
         const iconContainer = buttonElement.querySelector("span[data-lucide]");
 
         if (field.type === "password") {
@@ -439,18 +487,15 @@
           }
         }
 
-        // CRITICAL: Re-render the icon to display the new attribute state
         lucide.createIcons();
-      }
+      } // --- INTERACTIVE: BUTTON RIPPLE EFFECT ---
 
-      // --- INTERACTIVE: BUTTON RIPPLE EFFECT ---
       function createRipple(event) {
         const button = event.currentTarget;
         const circle = document.createElement("span");
         const diameter = Math.max(button.clientWidth, button.clientHeight);
-        const radius = diameter / 2;
+        const radius = diameter / 2; // Position the ripple where the click occurred
 
-        // Position the ripple where the click occurred
         circle.style.width = circle.style.height = `${diameter}px`;
         circle.style.left = `${
           event.clientX - (button.getBoundingClientRect().left + radius)
@@ -458,22 +503,19 @@
         circle.style.top = `${
           event.clientY - (button.getBoundingClientRect().top + radius)
         }px`;
-        circle.classList.add("ripple", "absolute");
+        circle.classList.add("ripple", "absolute"); // Remove existing ripples to avoid clutter
 
-        // Remove existing ripples to avoid clutter
         const oldRipple = button.querySelector(".ripple");
         if (oldRipple) {
           oldRipple.remove();
         }
 
         button.appendChild(circle);
-      }
+      } // --- MESSAGE BOX (Custom Alert Replacement) ---
 
-      // --- MESSAGE BOX (Custom Alert Replacement) ---
       function showMessage(message, isError = false) {
-        messageBox.textContent = message;
+        messageBox.textContent = message; // Set colors based on success or error
 
-        // Set colors based on success or error
         messageBox.style.backgroundColor = isError ? "#dc2626" : "#10B981";
         messageBox.style.boxShadow = isError
           ? "0 0 15px rgba(220, 38, 38, 0.5)"
@@ -486,16 +528,14 @@
           messageBox.style.opacity = 0;
           messageBox.style.pointerEvents = "none";
         }, 3000);
-      }
+      } // --- INTERACTIVE: LOADING STATE HANDLERS ---
 
-      // --- INTERACTIVE: LOADING STATE HANDLERS ---
       function setLoading(button, spinner, isLoading) {
         button.disabled = isLoading;
         button.classList.toggle("loading", isLoading);
         spinner.classList.toggle("active", isLoading);
-      }
+      } // 🚀 THE CRITICAL LOGIN HANDLER FIX 🚀
 
-      // 🚀 THE CRITICAL FIX IS HERE 🚀
       async function handleLogin() {
         const email = document.getElementById("login-email").value;
         const password = document.getElementById("login-password").value;
@@ -514,15 +554,13 @@
         console.log("Sending Login Data:", loginData);
 
         try {
-          // FIX: Added credentials: 'include' (Essential for HttpOnly cookies)
+          // 🛑 REMOVED credentials: "include"
           const response = await fetch(API_LOGIN_URL, {
             method: "POST",
             headers: getJsonHeaders(),
             body: JSON.stringify(loginData),
-            credentials: "include",
-          });
+          }); // Simulate network latency
 
-          // Simulate network latency (since fetch might be instant on localhost)
           await new Promise((resolve) => setTimeout(resolve, 500));
 
           const responseData = await response
@@ -530,15 +568,11 @@
             .catch(() => ({ message: "Could not parse JSON response." }));
 
           if (response.ok) {
-            // SUCCESS: Express should send a JWT token via HttpOnly Cookie (or in the response body)
+            // 🟢 FIX 1: Save the token to Local Storage
+            localStorage.setItem("authToken", responseData.token);
             showMessage(`Login successful! Redirecting to dashboard...`, false);
-            console.log(
-              "Expected Success Response Data (JWT info):",
-              responseData
-            );
+            console.log("Token saved. Success Response Data:", responseData); // 🟢 CRITICAL FIX: Redirect
 
-            // 🟢 CRITICAL FIX: The redirect line is now active!
-            // It uses a small delay so the user can see the "successful" message.
             setTimeout(() => (window.location.href = "./dashboard.html"), 500);
           } else if (response.status === 401 || response.status === 403) {
             // FAILURE: Authentication or Authorization error
@@ -589,22 +623,19 @@
           return;
         }
 
-        setLoading(signupBtn, signupSpinner, true);
+        setLoading(signupBtn, signupSpinner, true); // NEW: Include username in signup data
 
-        // NEW: Include username in signup data
         const signupData = { email, password, username };
         console.log("Sending Signup Data:", signupData);
 
         try {
-          // FIX: Added credentials: 'include'
+          // 🛑 REMOVED credentials: "include"
           const response = await fetch(API_SIGNUP_URL, {
             method: "POST",
             headers: getJsonHeaders(),
             body: JSON.stringify(signupData),
-            credentials: "include",
-          });
+          }); // Simulate network latency
 
-          // Simulate network latency
           await new Promise((resolve) => setTimeout(resolve, 500));
 
           const responseData = await response
@@ -616,7 +647,6 @@
             showMessage(`User registered successfully! Please log in.`, false);
             console.log("Expected Success Response Data:", responseData);
 
-            // Slide back to login after successful signup
             setTimeout(slideToLogin, 500);
           } else if (response.status === 409) {
             // FAILURE: Conflict (e.g., email already exists)
