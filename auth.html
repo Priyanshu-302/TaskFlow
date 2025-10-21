@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskFlow: Secure Login</title>
     <link rel="manifest" href="./manifest.json" />
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Tailwind Configuration -->
     <script>
       tailwind.config = {
         theme: {
@@ -39,6 +42,7 @@
         },
       };
     </script>
+    <!-- Inter Font Import -->
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
@@ -161,14 +165,12 @@
     </style>
   </head>
   <body>
-    <div
-      id="message-box"
-      class="fixed top-0 left-1/2 -translate-x-1/2 mt-4 p-4 rounded-lg shadow-xl text-white opacity-0 transition-opacity duration-300 pointer-events-none"
-      style="min-width: 300px; z-index: 200"
-    ></div>
-
+    <!-- Main Sliding Interface Container -->
     <div id="slide-container">
       <div id="slide-wrapper">
+        <!-- ============================================== -->
+        <!-- LOGIN PANEL (Left Side) -->
+        <!-- ============================================== -->
         <div class="form-panel" id="login-panel">
           <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
             <span
@@ -199,6 +201,7 @@
               />
             </div>
 
+            <!-- INTERACTIVE: Password field with toggle button -->
             <div class="relative">
               <label
                 for="login-password"
@@ -228,6 +231,7 @@
               onclick="createRipple(event)"
             >
               <span class="button-text">Login Securely</span>
+              <!-- Interactive: Loading Spinner -->
               <span
                 id="login-spinner"
                 class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -245,6 +249,9 @@
           </div>
         </div>
 
+        <!-- ============================================== -->
+        <!-- SIGNUP PANEL (Right Side) -->
+        <!-- ============================================== -->
         <div class="form-panel" id="signup-panel">
           <h2 class="text-3xl font-bold text-white mb-2 flex items-center">
             <span
@@ -289,6 +296,7 @@
               />
             </div>
 
+            <!-- INTERACTIVE: Password field with toggle button -->
             <div class="relative">
               <label
                 for="signup-password"
@@ -311,6 +319,7 @@
               </button>
             </div>
 
+            <!-- INTERACTIVE: Confirm Password field with toggle button -->
             <div class="relative">
               <label
                 for="confirm-password"
@@ -340,6 +349,7 @@
               onclick="createRipple(event)"
             >
               <span class="button-text">Sign Up</span>
+              <!-- Interactive: Loading Spinner -->
               <span
                 id="signup-spinner"
                 class="loading-spinner absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -359,6 +369,13 @@
       </div>
     </div>
 
+    <!-- Message Box (Instead of alert()) -->
+    <div
+      id="message-box"
+      class="fixed top-0 left-1/2 -translate-x-1/2 mt-4 p-4 rounded-lg shadow-xl text-white opacity-0 transition-opacity duration-300 pointer-events-none"
+      style="min-width: 300px; z-index: 200"
+    ></div>
+
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -375,14 +392,11 @@
       }
     </script>
 
+    <!-- JavaScript for Dynamic Interactivity -->
     <script>
-      // 🚨 UPDATED CONFIGURATION: Use your Vercel URL for API calls
-      // The backend should handle the mapping from this public domain to your backend service.
-      // If your backend is NOT on the same domain, change 'https://task-flow-one-ebon.vercel.app'
-      // to the actual deployed backend URL (e.g., 'https://your-backend-api.com').
-      const BASE_URL = "https://task-flow-one-ebon.vercel.app";
-      const API_LOGIN_URL = `${BASE_URL}/api/login`;
-      const API_SIGNUP_URL = `${BASE_URL}/api/signup`;
+      // --- CONFIGURATION ---
+      const API_LOGIN_URL = "https://taskflow-api-to12.onrender.com/api/login";
+      const API_SIGNUP_URL = "https://taskflow-api-to12.onrender.com/api/signup";
 
       // --- Utility function for API Headers ---
       const getJsonHeaders = () => {
@@ -486,7 +500,8 @@
         spinner.classList.toggle("active", isLoading);
       }
 
-      // 🚀 THE CRITICAL FIX IS HERE 🚀
+      // --- UPDATED HANDLERS WITH FETCH API INTEGRATION ---
+
       async function handleLogin() {
         const email = document.getElementById("login-email").value;
         const password = document.getElementById("login-password").value;
@@ -505,7 +520,7 @@
         console.log("Sending Login Data:", loginData);
 
         try {
-          // FIX: Added credentials: 'include' (Essential for HttpOnly cookies)
+          // FIX: Added credentials: 'include'
           const response = await fetch(API_LOGIN_URL, {
             method: "POST",
             headers: getJsonHeaders(),
@@ -528,8 +543,7 @@
               responseData
             );
 
-            // 🟢 CRITICAL FIX: The redirect line is now active!
-            // It uses a small delay so the user can see the "successful" message.
+            // UNCOMMENT THIS LINE FOR FINAL APP:
             setTimeout(() => (window.location.href = "./dashboard.html"), 500);
           } else if (response.status === 401 || response.status === 403) {
             // FAILURE: Authentication or Authorization error
@@ -546,7 +560,7 @@
         } catch (error) {
           // NETWORK ERROR
           showMessage(
-            `Connection error. Is your Express backend running?`,
+            `Connection error. Is your Express backend running on ${API_LOGIN_URL}?`,
             true
           );
           console.error("Fetch/Network Error:", error);
@@ -630,7 +644,7 @@
         } catch (error) {
           // NETWORK ERROR
           showMessage(
-            `Connection error. Is your Express backend running?`,
+            `Connection error. Is your Express backend running on ${API_SIGNUP_URL}?`,
             true
           );
           console.error("Fetch/Network Error:", error);
