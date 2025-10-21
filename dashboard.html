@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskFlow: Dashboard</title>
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="./manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -247,9 +247,12 @@
 
     <script type="text/javascript">
       // --- CONFIGURATION ---
+      // 🚀 IMPORTANT: Ensure this API BASE URL points to your Render backend
       const API_BASE_URL = "https://taskflow-api-to12.onrender.com/api/tasks";
-      const API_PROFILE_URL = "https://taskflow-api-to12.onrender.com/api/profile";
-      const API_LOGOUT_URL = "https://taskflow-api-to12.onrender.com/api/logout";
+      const API_PROFILE_URL =
+        "https://taskflow-api-to12.onrender.com/api/profile";
+      const API_LOGOUT_URL =
+        "https://taskflow-api-to12.onrender.com/api/logout";
 
       let currentTasks = [];
 
@@ -317,33 +320,33 @@
             task.completed ? "opacity-50 line-through" : ""
           }`;
           taskElement.innerHTML = `
-                    <div class="flex items-center flex-grow">
-                        <input type="checkbox" id="task-${task._id}" ${
+                        <div class="flex items-center flex-grow">
+                            <input type="checkbox" id="task-${task._id}" ${
             task.completed ? "checked" : ""
           }
-                            class="form-checkbox h-5 w-5 text-vibrant rounded border-gray-600 bg-dark-bg mr-4 focus:ring-vibrant cursor-pointer"
-                            onchange="window.toggleTaskCompletion('${
+                                class="form-checkbox h-5 w-5 text-vibrant rounded border-gray-600 bg-dark-bg mr-4 focus:ring-vibrant cursor-pointer"
+                                onchange="window.toggleTaskCompletion('${
+                                  task._id
+                                }', ${!task.completed})">
+                            <span class="font-medium">${task.title}</span>
+                        </div>
+                        <div class="flex items-center space-x-3 ml-4">
+                            <span class="text-xs font-semibold ${
+                              task.priority === "High"
+                                ? "text-primary border-primary/50"
+                                : task.priority === "Medium"
+                                ? "text-vibrant border-vibrant/50"
+                                : "text-gray-500 border-gray-500/50"
+                            } border px-2 py-0.5 rounded-full">
+                                ${task.priority}
+                            </span>
+                            <button onclick="window.deleteTask('${
                               task._id
-                            }', ${!task.completed})">
-                        <span class="font-medium">${task.title}</span>
-                    </div>
-                    <div class="flex items-center space-x-3 ml-4">
-                        <span class="text-xs font-semibold ${
-                          task.priority === "High"
-                            ? "text-primary border-primary/50"
-                            : task.priority === "Medium"
-                            ? "text-vibrant border-vibrant/50"
-                            : "text-gray-500 border-gray-500/50"
-                        } border px-2 py-0.5 rounded-full">
-                            ${task.priority}
-                        </span>
-                        <button onclick="window.deleteTask('${
-                          task._id
-                        }')" class="text-gray-500 hover:text-error transition duration-200">
-                            <span data-lucide="trash-2" class="w-4 h-4"></span>
-                        </button>
-                    </div>
-                `;
+                            }')" class="text-gray-500 hover:text-error transition duration-200">
+                                <span data-lucide="trash-2" class="w-4 h-4"></span>
+                            </button>
+                        </div>
+                    `;
           taskList.appendChild(taskElement);
         });
         lucide.createIcons();
@@ -394,15 +397,17 @@
           displayEl.textContent = firstName;
         } catch (error) {
           clearTimeout(timeoutId);
-          if (error.name === "AbortError") {
-            console.warn("Profile fetch timed out (4s). Displaying 'Guest'.");
-          } else if (error.message.includes("Failed to fetch")) {
-            console.error("Network connection failed for profile fetch.");
-          } else {
-            console.error("Error fetching profile for navbar:", error);
-          }
-          // Fallback for all failures (timeout, network, unhandled HTTP error)
-          displayEl.textContent = "Guest";
+
+          // 🛑 CRITICAL FIX: Treat ANY network/fetch error or timeout as unauthenticated
+          // to force the login redirect and clear the session loop attempt.
+          console.error(
+            "Critical failure during profile authentication check. Forcing redirect.",
+            error
+          );
+          window.location.href = "./auth.html";
+          return;
+
+          // The original code's complex fallback is replaced by this definitive redirect.
         }
       };
 
@@ -420,31 +425,23 @@
             return;
           }
           if (!response.ok) {
-            if (response.type === "opaque" || response.status === 0) {
-              throw new Error(
-                `Connection refused. Ensure your Express server is running on http://localhost:3000.`
-              );
-            }
+            // More robust error handling for general server issues (500s)
             throw new Error(`HTTP error! status: ${response.status}`);
           }
+
           const fetchedTasks = await response.json();
           currentTasks = fetchedTasks;
 
           currentTasks.sort(sortTasks);
           renderTasks(currentTasks);
         } catch (error) {
-          if (
-            error.message.includes("Connection refused") ||
-            error.message.includes("Failed to fetch")
-          ) {
-            document.getElementById("error-message").textContent =
-              "Network Error: Cannot reach Express server. Check if it's running on port 3000.";
-            document.getElementById("error-message").classList.remove("hidden");
-          } else {
-            document.getElementById("error-message").textContent =
-              error.message;
-            document.getElementById("error-message").classList.remove("hidden");
-          }
+          // Display the error but do NOT force a redirect here, as fetchProfileData already handled it.
+          const msg = error.message.includes("Failed to fetch")
+            ? "Network Error: Cannot reach Express server."
+            : error.message;
+
+          document.getElementById("error-message").textContent = msg;
+          document.getElementById("error-message").classList.remove("hidden");
         } finally {
           document.getElementById("loading-overlay").classList.add("hidden");
         }
@@ -468,6 +465,12 @@
             getFetchOptions("POST", newTaskData)
           );
 
+          if (response.status === 401 || response.status === 403) {
+            // Catch 401/403 errors that occur during in-app interaction
+            console.error("Session expired. Redirecting.");
+            window.location.href = "./auth.html";
+            return;
+          }
           if (!response.ok) {
             throw new Error(`Failed to create task: ${response.status}`);
           }
@@ -493,6 +496,11 @@
             getFetchOptions("PATCH", updateData)
           );
 
+          if (response.status === 401 || response.status === 403) {
+            console.error("Session expired. Redirecting.");
+            window.location.href = "./auth.html";
+            return;
+          }
           if (!response.ok) {
             throw new Error(`Failed to update task: ${response.status}`);
           }
@@ -511,6 +519,11 @@
         try {
           const response = await fetch(endpoint, getFetchOptions("DELETE"));
 
+          if (response.status === 401 || response.status === 403) {
+            console.error("Session expired. Redirecting.");
+            window.location.href = "./auth.html";
+            return;
+          }
           if (!response.ok) {
             throw new Error(`Failed to delete task: ${response.status}`);
           }
@@ -526,16 +539,18 @@
       /** Initializes the app by fetching profile and tasks. */
       const initApp = async () => {
         // Step 1: Attempt to fetch the profile to determine auth status and username.
+        // This is the primary point of failure for the redirect loop.
         await window.fetchProfileData();
 
-        // Step 2: Only proceed to fetch tasks if authentication was successful (username is not 'Guest').
-        // The loading overlay is handled by the last promise to resolve, which is fetchTasks.
+        // Step 2: Only proceed to fetch tasks if authentication was successful.
+        // If fetchProfileData redirected, the rest of this code is ignored.
         if (
           document.getElementById("user-id-display").textContent !== "Guest"
         ) {
           await window.fetchTasks();
         } else {
-          // If profile failed and displayed 'Guest', hide the loader immediately.
+          // If fetchProfileData failed but didn't redirect (e.g., if we caught a different error),
+          // ensure the loader is hidden. (Note: with the fix above, this should always redirect).
           document.getElementById("loading-overlay").classList.add("hidden");
         }
 
@@ -544,22 +559,23 @@
         );
       };
 
-      /** Handles user sign out by removing token and redirecting. */
+      /** Handles user sign out by clearing token and redirecting. */
       window.handleLogout = async () => {
         console.log(
-          "Simulating Express /api/logout request to clear JWT cookie..."
+          "Sending /api/logout request to clear JWT cookie on Render..."
         );
         try {
-          await fetch("http://localhost:3000/api/logout", {
+          // 🚀 IMPORTANT: Use the correct deployed API URL for logout
+          await fetch(API_LOGOUT_URL, {
             method: "POST",
             credentials: "include",
           });
         } catch (e) {
           console.warn(
-            "Logout request failed (expected if API is not running), proceeding with client-side redirect."
+            "Logout request failed (expected if API is down), proceeding with client-side redirect."
           );
         }
-        window.location.href = "./index.html";
+        window.location.href = "./auth.html";
       };
 
       // Start initialization when the window loads
